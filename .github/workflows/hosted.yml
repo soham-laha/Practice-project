@@ -25,7 +25,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   reference-frontend:
-    name: Public reference frontend · not full backend acceptance
+    name: Hosted workflows and optional API integration · no real Gemini key
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
@@ -48,7 +48,7 @@ jobs:
           JS
       - name: Public pages, notices and explicit backend availability
         run: node scripts/check-hosted.mjs
-      - name: Real hosted reference workflows and accessibility (AI transport mocked)
+      - name: Hosted workflows, accessibility and optional API/CORS/upload transport
         env:
           TEST_BASE_URL: ${{ env.SMOKE_FRONTEND_URL }}
         run: npm run test:e2e
