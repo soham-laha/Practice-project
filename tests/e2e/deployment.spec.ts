@@ -6,9 +6,7 @@ import { publicOrigin } from '../../scripts/check-hosted.mjs';
 test.describe('public two-service integration without provider spend', () => {
   test.skip(!process.env.SMOKE_BACKEND_URL, 'A real public backend origin is required.');
 
-  test('health, both exam certificates, proxy key gates, exact CORS and upload-aware CSP', async ({
-    request,
-  }) => {
+  test('health and both exam certificate sets on the real backend', async ({ request }) => {
     test.setTimeout(180000); // Render Free can take 50+ seconds to wake up.
     const frontend = publicOrigin(process.env.SMOKE_FRONTEND_URL);
     const backend = publicOrigin(process.env.SMOKE_BACKEND_URL);
@@ -38,11 +36,22 @@ test.describe('public two-service integration without provider spend', () => {
         maxRedirects: 0,
         timeout: 30000,
       });
-      expect(validated.status()).toBe(200);
-      const { results } = await validated.json();
-      expect(results).toHaveLength(6);
-      expect(results.every((result: { valid: boolean }) => result.valid)).toBe(true);
+      // Only public bundled reference data is involved here, never a key or
+      // a learner's source. Keep the safe rejection visible in GitHub Checks.
+      const validation = await validated.json();
+      expect(
+        validated.status(),
+        `${exam} reference validation: ${JSON.stringify(validation)}`,
+      ).toBe(200);
+      expect(validation.results).toHaveLength(6);
+      expect(validation.results.every((result: { valid: boolean }) => result.valid)).toBe(true);
     }
+  });
+
+  test('proxy key gates, exact CORS and upload-aware CSP', async ({ request }) => {
+    test.setTimeout(180000);
+    const frontend = publicOrigin(process.env.SMOKE_FRONTEND_URL);
+    const backend = publicOrigin(process.env.SMOKE_BACKEND_URL);
     for (const model of ['gemini-flash-latest', 'gemini-flash-lite-latest']) {
       for (const [path, data] of [
         [
@@ -64,12 +73,14 @@ test.describe('public two-service integration without provider spend', () => {
         expect((await response.json()).detail).toContain('Gemini key');
       }
     }
-    const foreignWrite = await request.post(`${frontend}/api/engine/v1/extractions`, {
-      data: { text: 'A complete textbook problem is supplied here.', exam: 'main' },
-      headers: { Origin: 'https://untrusted.invalid' },
-      maxRedirects: 0,
-    });
-    expect(foreignWrite.status()).toBe(403);
+    for (const origin of ['https://untrusted.invalid', 'null', 'not-an-origin']) {
+      const foreignWrite = await request.post(`${frontend}/api/engine/v1/extractions`, {
+        data: { text: 'A complete textbook problem is supplied here.', exam: 'main' },
+        headers: { Origin: origin },
+        maxRedirects: 0,
+      });
+      expect(foreignWrite.status(), `${origin}: unsafe write origin`).toBe(403);
+    }
     const preflightHeaders = {
       'Access-Control-Request-Method': 'POST',
       'Access-Control-Request-Headers': 'Content-Type, X-Gemini-Api-Key',
