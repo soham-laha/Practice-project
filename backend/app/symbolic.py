@@ -81,6 +81,8 @@ def parse_expression(source: str, domain: dict[str, str] | None = None) -> sp.Ex
                 if not right.is_number or abs(float(right)) > 6:
                     raise ValueError("Only bounded numeric exponents supported")
                 return left**right
+        if isinstance(n, ast.Tuple) and 2 <= len(n.elts) <= 4:
+            return sp.Matrix([visit(elt, depth + 1) for elt in n.elts])
         if (
             isinstance(n, ast.Call)
             and isinstance(n.func, ast.Name)
@@ -92,9 +94,20 @@ def parse_expression(source: str, domain: dict[str, str] | None = None) -> sp.Ex
         raise ValueError("Unsupported expression syntax")
 
     result = visit(root)
+    if isinstance(result, sp.Matrix):
+        for e in result:
+            if e.has(sp.zoo, sp.oo, -sp.oo, sp.nan, sp.I) or e.is_real is False:
+                raise ValueError("Non-real or undefined coordinate")
+        return result
     if result.has(sp.zoo, sp.oo, -sp.oo, sp.nan, sp.I) or result.is_real is False:
         raise ValueError("Non-real or undefined expression")
     return result
+
+
+def to_canonical_latex(val: sp.Expr | sp.Matrix) -> str:
+    if isinstance(val, sp.Matrix):
+        return "(" + ", ".join(sp.latex(x) for x in val) + ")"
+    return sp.latex(val)
 
 
 def verify_item(item: Item) -> dict:
@@ -103,35 +116,49 @@ def verify_item(item: Item) -> dict:
     for option in item.options:
         value = parse_expression(option.expression, item.domain)
         derived = parse_expression(option.derived_expression, item.domain)
-        if sp.simplify(value - derived) != 0:
+        if isinstance(value, sp.Matrix) and isinstance(derived, sp.Matrix):
+            if not all(sp.simplify(e) == 0 for e in (value - derived)):
+                raise ValueError(f"Option {option.id} does not match its derivation certificate")
+        elif sp.simplify(value - derived) != 0:
             raise ValueError(f"Option {option.id} does not match its derivation certificate")
         if option.unit != item.expected_unit:
             raise ValueError(f"Option {option.id} violates expected dimensional powers")
         for previous in values:
-            difference = sp.simplify(value - previous)
-            if difference == 0:
-                raise ValueError("Equivalent distractors rejected")
-            # Require a proof of non-identity, not merely an unproven != 0.
-            if difference.equals(0) is not False:
-                raise ValueError("Option distinctness cannot be established")
+            if isinstance(value, sp.Matrix) and isinstance(previous, sp.Matrix):
+                matrix_diff = value - previous
+                if all(sp.simplify(e) == 0 for e in matrix_diff):
+                    raise ValueError("Equivalent distractors rejected")
+                if not any(sp.simplify(e).equals(0) is False for e in matrix_diff):
+                    raise ValueError("Option distinctness cannot be established")
+            else:
+                difference = sp.simplify(value - previous)
+                if difference == 0:
+                    raise ValueError("Equivalent distractors rejected")
+                # Require a proof of non-identity, not merely an unproven != 0.
+                if difference.equals(0) is not False:
+                    raise ValueError("Option distinctness cannot be established")
         values.append(value)
-        equivalent = sp.simplify(value - target) == 0
+        if isinstance(value, sp.Matrix) and isinstance(target, sp.Matrix):
+            equivalent = all(sp.simplify(e) == 0 for e in (value - target))
+        else:
+            equivalent = sp.simplify(value - target) == 0
         if equivalent != (option.id == item.correct_id):
             raise ValueError("Key does not uniquely match solution certificate")
         if option.trap:
             r = option.trap.recovery_check
-            if (
-                sp.simplify(
-                    parse_expression(r.expression, item.domain)
-                    - parse_expression(r.target_expression, item.domain)
-                )
-                != 0
-            ):
+            rec_val = parse_expression(r.expression, item.domain)
+            rec_target = parse_expression(r.target_expression, item.domain)
+            if isinstance(rec_val, sp.Matrix) and isinstance(rec_target, sp.Matrix):
+                if not all(sp.simplify(e) == 0 for e in (rec_val - rec_target)):
+                    raise ValueError("Recovery answer certificate failed")
+            elif sp.simplify(rec_val - rec_target) != 0:
                 raise ValueError("Recovery answer certificate failed")
     return {
         "id": item.id,
         "valid": True,
-        "canonical_options": {o.id: sp.latex(v) for o, v in zip(item.options, values, strict=True)},
+        "canonical_options": {
+            o.id: to_canonical_latex(v) for o, v in zip(item.options, values, strict=True)
+        },
         "checks": [
             "unique-options",
             "key-certificate",

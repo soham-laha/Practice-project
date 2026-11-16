@@ -73,7 +73,8 @@ def extraction_schema(exam: Exam) -> dict:
     if exam not in ("main", "advanced"):
         raise ValueError("Unsupported exam mode")
     schema = _project(ExtractionResult.model_json_schema())
-    schema["properties"]["items"]["maxItems"] = 1  # The system prompt requests ONE problem.
+    schema["properties"]["items"]["minItems"] = 1
+    schema["properties"]["items"]["maxItems"] = 10
     item = schema["$defs"]["Item"]
     properties = item["properties"]
     properties["exam"]["enum"] = [exam]

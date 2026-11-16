@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -13,19 +13,22 @@ import {
   LoaderCircle,
   Copy,
   AlertCircle,
+  Sparkles,
 } from 'lucide-react';
 import { useApp } from './providers';
 import { ExamSelect } from './exam-select';
 import { MathText } from './math';
 import { LocalAssistant } from './local-assistant';
 import { apiRequest, ApiError, checkEngine, diagnosticReceipt } from '@/lib/api';
+import { generateLocalDrill } from '@/lib/local-generator';
 import { itemSchema, type Item } from '@/lib/types';
 import { KEYS } from '@/lib/storage';
 
 export function Forge() {
   const { exam, model, setModel, hasKey, setKeyModal } = useApp(),
     router = useRouter();
-  const [tab, setTab] = useState<'text' | 'image' | 'pdf'>('text'),
+  const [generatorMode, setGeneratorMode] = useState<'local' | 'cloud'>('cloud'),
+    [tab, setTab] = useState<'text' | 'image' | 'pdf'>('text'),
     [text, setText] = useState(''),
     [file, setFile] = useState<File | null>(null),
     [busy, setBusy] = useState(false),
@@ -36,6 +39,11 @@ export function Forge() {
     [engine, setEngine] = useState(''),
     [checking, setChecking] = useState(false),
     [items, setItems] = useState<Item[]>([]);
+
+  useEffect(() => {
+    if (!hasKey) setGeneratorMode('local');
+    else setGeneratorMode('cloud');
+  }, [hasKey]);
   function chooseFile(f: File | undefined) {
     setError('');
     setFailure(null);
@@ -59,7 +67,7 @@ export function Forge() {
     setFile(f);
   }
   async function generate() {
-    if (!hasKey) {
+    if (generatorMode === 'cloud' && !hasKey) {
       setKeyModal(true);
       return;
     }
@@ -69,6 +77,27 @@ export function Forge() {
     setCopied('');
     setItems([]);
     setUsedModel(model);
+
+    if (generatorMode === 'local') {
+      if (tab === 'text' && text.trim().length > 0 && text.trim().length < 10) {
+        setError('Paste a complete problem, at least 10 characters.');
+        return;
+      }
+      setBusy(true);
+      try {
+        const localDrill = generateLocalDrill({ text, exam, requestedCount: 4 });
+        if (!localDrill.length) {
+          throw new Error('Could not parse drill items locally. Please check your problem text.');
+        }
+        setItems(localDrill);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Local generation failed.');
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+
     if (tab === 'text' && text.trim().length < 10) {
       setError('Paste a complete problem, at least 10 characters.');
       return;
@@ -92,7 +121,7 @@ export function Forge() {
         tab === 'text' ? 'v1/extractions' : 'v1/extractions/upload',
         body,
       );
-      if (!Array.isArray(result.items) || !result.items.length || result.items.length > 5)
+      if (!Array.isArray(result.items) || !result.items.length || result.items.length > 10)
         throw new Error();
       const parsed: Item[] = result.items.map((i: unknown) => itemSchema.parse(i));
       if (
@@ -239,22 +268,41 @@ export function Forge() {
           </div>
           <div className="forge-settings">
             <div>
-              <label className="field-label" htmlFor="forge-model">
-                Your Gemini model
+              <label className="field-label" htmlFor="generator-engine">
+                Generation engine
               </label>
               <select
-                id="forge-model"
-                value={model}
+                id="generator-engine"
+                value={generatorMode}
                 onChange={(e) => {
-                  setModel(e.target.value as typeof model);
+                  setGeneratorMode(e.target.value as 'local' | 'cloud');
                   setItems([]);
                 }}
                 disabled={busy}
               >
-                <option value="gemini-flash-latest">Gemini Flash (balanced)</option>
-                <option value="gemini-flash-lite-latest">Gemini Flash Lite (lightweight)</option>
+                <option value="local">In-Browser Engine (Instant, no API key needed)</option>
+                <option value="cloud">Gemini Cloud Model (Requires API key)</option>
               </select>
             </div>
+            {generatorMode === 'cloud' && (
+              <div>
+                <label className="field-label" htmlFor="forge-model">
+                  Your Gemini model
+                </label>
+                <select
+                  id="forge-model"
+                  value={model}
+                  onChange={(e) => {
+                    setModel(e.target.value as typeof model);
+                    setItems([]);
+                  }}
+                  disabled={busy}
+                >
+                  <option value="gemini-flash-latest">Gemini Flash (balanced)</option>
+                  <option value="gemini-flash-lite-latest">Gemini Flash Lite (lightweight)</option>
+                </select>
+              </div>
+            )}
             <p className="tiny-text">
               JEE {exam === 'main' ? 'Main' : 'Advanced'}
               <br />
@@ -264,19 +312,31 @@ export function Forge() {
           </div>
           <div className="form-bottom">
             <p className="tiny-text">
-              Only upload material you’re allowed to share with your AI provider. Nothing is stored
-              on our server.
+              {generatorMode === 'local'
+                ? 'In-browser generation runs locally on your device with 0 external API key required and no timeout. Gemini API key is optional for post-drill coaching.'
+                : 'Only upload material you’re allowed to share with your AI provider. Nothing is stored on our server.'}
             </p>
             <button className="button primary" disabled={busy} onClick={() => void generate()}>
-              {busy ? <LoaderCircle size={16} className="spinner" /> : <KeyRound size={16} />}
-              {busy ? 'Forging & checking…' : hasKey ? 'Forge my drill' : 'Add key to forge'}
+              {busy ? (
+                <LoaderCircle size={16} className="spinner" />
+              ) : generatorMode === 'local' ? (
+                <Sparkles size={16} />
+              ) : (
+                <KeyRound size={16} />
+              )}
+              {busy
+                ? 'Forging & checking…'
+                : hasKey || generatorMode === 'local'
+                  ? 'Forge my drill'
+                  : 'Add key to forge'}
               <ArrowRight size={16} />
             </button>
           </div>
           {busy && (
             <p className="forge-working" role="status">
-              Waiting for Gemini and the algebra check. Allow up to two minutes. No automatic retry
-              or model switch.
+              {generatorMode === 'local'
+                ? 'Generating verified options and distractors directly in your browser…'
+                : 'Waiting for Gemini and the algebra check. Allow up to two minutes. No automatic retry or model switch.'}
             </p>
           )}
           {error && (
