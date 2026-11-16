@@ -4,7 +4,7 @@
 
 Turn a textbook problem into a timed, four-option drill. Understand why a wrong answer looked right, find the first invalid pivot, test a counterfactual, and close the loop with a 45-second recovery check. Or start with the complete built-in reference experience—no account, API key or running AI service needed.
 
-> **Deployment status:** the reference frontend is deployed. Use the **Website** field in this repository’s **About** panel for the public site; the URL is intentionally not duplicated in this README. The AI forge/coach still require the separate backend deployment. PR #1 and [PR #2](https://github.com/soham-laha/Practice-project/pull/2) are merged into `main`, and both Node 22/26 + Python 3.12 CI jobs passed. See [the repository investigation](docs/REPOSITORY_REVIEW.md), [verification evidence](docs/AUDIT_REPORT.md) and [the remaining backend handoff](docs/DEPLOYMENT.md). This is not yet full production acceptance. The older TargetJEE product remains untouched.
+> **Deployment status:** the new Vercel frontend and stateless Render API are deployed and connected. Use the **Website** field in this repository’s **About** panel for the public site; the URL is intentionally not duplicated in this README. Reference drills need no key; AI forge/coach require each learner’s browser-held Gemini key. **Live batch validation hit the old deadline on Render Free; a tested source correction still needs backend deployment.** PRs #1–#3 are merged into `main`. See [the repository investigation](docs/REPOSITORY_REVIEW.md), [exact verification evidence and remaining gates](docs/AUDIT_REPORT.md) and [the existing-service update steps](docs/DEPLOYMENT.md). The older TargetJEE product remains untouched.
 
 ## What’s included
 
@@ -105,7 +105,7 @@ The latest user instruction explicitly authorizes committing and pushing this im
 
 ### Backend (Render or Railway)
 
-[Deploy the new isolated backend on Render](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2Fsoham-laha%2FPractice-project). Review and approve the `targetjee-studio-api` Blueprint in your own Render account, then provide only its public HTTPS origin—never a token or Gemini key. The prepared Blueprint sets the exact new frontend origin and disables push-triggered automatic deployment. See [the handoff](docs/DEPLOYMENT.md).
+The owner has deployed the new **`targetjee-studio-api`** Render service from `main`; its public health endpoint is verified, and the dedicated Vercel frontend has been rebuilt with that API origin. Do not create a duplicate service for the existing installation. See [the live-host inventory and operator guide](docs/DEPLOYMENT.md) for verification and future isolated installations. The Blueprint sets exact frontend CORS and disables push-triggered source deployments.
 
 - Build `backend/Dockerfile` with **root build context** so `data/` is copied.
 - The image uses Python 3.12, a non-root user and `${PORT:-8000}`.
@@ -118,10 +118,10 @@ The latest user instruction explicitly authorizes committing and pushing this im
 ### Frontend (Vercel)
 
 - The dedicated `targetjee-studio` project is deployed; its public address belongs in **About → Website**. It uses repository-root Next.js, Node 26, `npm ci` and `npm run build`. Do not use the older project.
-- Set server-only `TARGETJEE_API_BASE_URL=https://your-new-api-host`.
-- Deploy production and verify `/`, `/simulator`, `/dashboard`, both exam modes, direct HTTPS file uploads and local persistence. Exact backend CORS must include this new frontend origin.
-- Run `SMOKE_FRONTEND_URL=https://your-new-frontend SMOKE_BACKEND_URL=https://your-new-api npm run smoke` against the real hosts; placeholder URLs above are not deployments.
-- The initial production deployment is READY and the public alias serves the application without authentication. The backend is still unconfigured, so the forge/coach return an explicit unavailable response; adding a key alone cannot provision the missing service. Vercel Functions have a 4.5 MB body cap, so hosting this API there unchanged would not satisfy the 20 MB upload requirement.
+- Server-only `TARGETJEE_API_BASE_URL` is configured in **production** with the new Render API origin; no provider key is configured on either host.
+- Rebuild production after changing the API origin: the CSP upload allowlist is compiled at build time. Then verify `/`, `/simulator`, `/dashboard`, both exam modes, direct HTTPS uploads and local persistence. Exact backend CORS must include this frontend origin.
+- Run `SMOKE_FRONTEND_URL=https://your-new-frontend SMOKE_BACKEND_URL=https://your-new-api npm run smoke` against real hosts; placeholder URLs in this command are not deployments. The hosted GitHub workflow also accepts both origins and exercises actual browser CORS/CSP upload transport without a valid provider key.
+- The connected production deployment is READY and the public alias serves the application without authentication. Full live Gemini extraction/coach acceptance remains separate from keyless auth checks, mocked UI tests and large-body transport tests; see the audit. Vercel Functions have a 4.5 MB body cap, so multipart files go directly to the allowlisted HTTPS API instead of that proxy.
 
 ## Mathematical and product limits
 
