@@ -29,6 +29,7 @@ export function ByokModal() {
       onClose={() => {
         setKeyModal(false);
         setValue('');
+        setVisible(false);
         setError('');
       }}
       aria-labelledby="byok-title"
@@ -62,8 +63,8 @@ export function ByokModal() {
         <em>Entirely on your terms.</em>
       </h2>
       <p className="muted">
-        Connect a Gemini key for the problem forge and your personal AI coach. Reference drills are
-        always ready, no key needed.
+        Save a Gemini key for the problem forge and your AI coach. Saving checks the format only;
+        Google checks access and quota when you make a request. Reference drills need no key.
       </p>
       <a
         className="text-link"
@@ -150,8 +151,16 @@ export function ByokModal() {
         <button
           className="button danger full remove-key"
           onClick={() => {
-            removeKey();
-            setValue('');
+            try {
+              removeKey();
+              setValue('');
+              setVisible(false);
+              setError('');
+            } catch {
+              setError(
+                'Browser storage is blocked. Clear this site’s storage to remove the saved key.',
+              );
+            }
           }}
         >
           <Trash2 size={16} />

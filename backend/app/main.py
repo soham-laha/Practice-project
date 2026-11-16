@@ -142,6 +142,41 @@ async def validate(payload: ValidationRequest):
         validation_queue.release()
 
 
+def forge_rejection(error: ValueError) -> tuple[int, str]:
+    message = str(error)
+    if message == "Symbolic verification timed out; simplify the problem":
+        return (
+            503,
+            "The algebra check reached its time limit. No item was released. "
+            "Try one simpler problem or a reference drill; no automatic retry was made.",
+        )
+    reasons = {
+        "Equivalent distractors rejected": "Gemini produced equivalent answer options.",
+        "Option distinctness cannot be established": "The answer options could not be proved distinct.",
+        "Key does not uniquely match solution certificate": "The generated key did not match a unique checked answer.",
+        "Recovery answer certificate failed": "A generated recovery answer did not match its certificate.",
+        "Undeclared symbol": "A generated expression used a symbol outside its declared domain.",
+        "Only bounded numeric exponents supported": "A generated exponent is outside the supported algebra language.",
+        "Unsupported expression syntax": "A generated expression used unsupported algebra syntax.",
+        "Non-real or undefined expression": "A generated expression was undefined or non-real.",
+    }
+    for option_id in "ABCD":
+        reasons[f"Option {option_id} does not match its derivation certificate"] = (
+            "A generated option did not match its derivation certificate."
+        )
+        reasons[f"Option {option_id} violates expected dimensional powers"] = (
+            "The generated unit vectors were inconsistent."
+        )
+    reason = reasons.get(
+        message, "The generated item could not be safely verified by the algebra check."
+    )
+    return (
+        422,
+        f"{reason} No unverified item was released. This can be a generation error, not an image problem. "
+        "Try one problem or the other model; no automatic retry was made.",
+    )
+
+
 async def forge(
     payload: ExtractionRequest,
     key: str,
@@ -158,11 +193,11 @@ async def forge(
         items = await gemini.extract(payload, key, data, mime)
         try:
             verification = await run_in_threadpool(verify_bounded, items)
-        except ValueError:
-            raise HTTPException(
-                422,
-                "Symbolic guardrail rejected the generated options or certificates. Try a clearer or simpler source; no unverified item was released.",
-            ) from None
+        except ValueError as exc:
+            # Translate only known verifier messages; never echo arbitrary
+            # worker/model text or exception contents into a BYOK response.
+            status, detail = forge_rejection(exc)
+            raise HTTPException(status, detail) from None
         for item, result in zip(items, verification, strict=True):
             # Never trust the model's display string over the checked expression.
             for option in item.options:
@@ -197,7 +232,9 @@ def inspect_upload(data: bytes, mime: str):
             raise ValueError("File signature does not match PNG")
         if mime == "image/jpeg" and not data.startswith(b"\xff\xd8\xff"):
             raise ValueError("File signature does not match JPEG")
-        with Image.open(io.BytesIO(data)) as image:
+        # Restrict decoder discovery as well as the MIME/signature checks.
+        # Do not initialize unrelated image plugins for untrusted uploads.
+        with Image.open(io.BytesIO(data), formats=["PNG", "JPEG"]) as image:
             if image.width * image.height > 25_000_000:
                 raise ValueError("Image exceeds 25 megapixels; resize it first")
             if image.format not in ("PNG", "JPEG"):

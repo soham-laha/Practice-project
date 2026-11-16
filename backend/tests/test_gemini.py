@@ -77,7 +77,10 @@ def test_duplicate_provider_item_ids_rejected(monkeypatch):
     assert response.status_code == 422
 
 
-@pytest.mark.parametrize("status,expected", [(400, 502), (401, 401), (429, 429), (500, 502)])
+@pytest.mark.parametrize(
+    "status,expected",
+    [(400, 502), (401, 401), (403, 401), (404, 502), (429, 429), (500, 502), (503, 502)],
+)
 def test_provider_error_body_never_forwarded(monkeypatch, status, expected):
     mock_provider(monkeypatch, lambda _: httpx.Response(status, json={"error": {"message": KEY}}))
     response = client.post(

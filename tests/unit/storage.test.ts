@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { openDB } from 'idb';
-import { KEYS, loadLearner, persistLearner } from '@/lib/storage';
+import { KEYS, loadLearner, persistLearner, resetLocalData } from '@/lib/storage';
 import { EMPTY_LEARNER } from '@/lib/types';
 
 vi.mock('idb', () => ({ openDB: vi.fn() }));
 const mockOpen = vi.mocked(openDB);
-const db = { get: vi.fn(), put: vi.fn(), close: vi.fn() };
+const db = { get: vi.fn(), put: vi.fn(), clear: vi.fn(), close: vi.fn() };
 let values: Map<string, string>;
 beforeEach(() => {
   vi.clearAllMocks();
@@ -18,6 +18,8 @@ beforeEach(() => {
   mockOpen.mockResolvedValue(db as unknown as Awaited<ReturnType<typeof openDB>>);
   db.get.mockResolvedValue(undefined);
   db.put.mockResolvedValue(undefined);
+  db.clear.mockResolvedValue(undefined);
+  vi.stubGlobal('sessionStorage', { removeItem: vi.fn() });
 });
 afterEach(() => vi.unstubAllGlobals());
 
@@ -54,6 +56,23 @@ describe('local persistence failover', () => {
     });
     db.get.mockResolvedValue(EMPTY_LEARNER);
     expect(await loadLearner()).toEqual(EMPTY_LEARNER);
+  });
+  it('does not claim a successful reset when IndexedDB cannot be cleared', async () => {
+    db.clear.mockRejectedValueOnce(new Error('storage blocked'));
+    values.set(KEYS.fallback, JSON.stringify(EMPTY_LEARNER));
+    await expect(resetLocalData()).rejects.toThrow('storage blocked');
+    expect(db.close).toHaveBeenCalledOnce();
+    expect(values.has(KEYS.fallback)).toBe(true);
+  });
+  it('clears canonical history and owned keys, without touching other apps', async () => {
+    for (const key of Object.values(KEYS)) values.set(key, 'fixture');
+    values.set('another-app', 'untouched');
+    await resetLocalData();
+    expect(db.clear).toHaveBeenCalledWith('state');
+    expect(db.close).toHaveBeenCalledOnce();
+    expect([...values]).toEqual([['another-app', 'untouched']]);
+    expect(sessionStorage.removeItem).toHaveBeenCalledWith(KEYS.active);
+    expect(sessionStorage.removeItem).toHaveBeenCalledWith(KEYS.forged);
   });
   it('rejects a corrupt fallback instead of silently losing the newest data', async () => {
     values.set(KEYS.fallback, JSON.stringify({ ...EMPTY_LEARNER, secret: 'not allowed' }));

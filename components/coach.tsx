@@ -177,7 +177,7 @@ export function Coach({ session, sample = false }: { session?: Session; sample?:
         <span>·</span>
         <button onClick={() => setKeyModal(true)}>Manage key & model</button>
       </div>
-      <p className="tiny-text" style={{ fontSize: 8, marginTop: 10 }}>
+      <p className="tiny-text" style={{ marginTop: 10 }}>
         AI suggestions can be wrong and are not SymPy-verified drill items. Use the forge to
         validate a full new drill.
       </p>

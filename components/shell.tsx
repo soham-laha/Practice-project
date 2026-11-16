@@ -137,8 +137,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <button className="key-nav" onClick={() => setKeyModal(true)}>
             <KeyRound size={17} />
             <span>
-              {hasKey ? 'Gemini connected' : 'Connect Gemini'}
-              <small>{hasKey ? 'Key stored locally' : 'Bring your own key'}</small>
+              {hasKey ? 'Gemini key saved' : 'Add Gemini key'}
+              <small>{hasKey ? 'Access checked when used' : 'Bring your own key'}</small>
             </span>
             <ChevronRight size={15} />
           </button>
@@ -177,11 +177,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <span className="topbar-divider" />
             <button
               className={`key-pill ${hasKey ? 'connected' : ''}`}
-              aria-label={hasKey ? 'Manage connected Gemini key' : 'Add API key'}
+              aria-label={hasKey ? 'Manage saved Gemini key' : 'Add API key'}
               onClick={() => setKeyModal(true)}
             >
               <KeyRound size={15} />
-              <span>{hasKey ? 'Key connected' : 'Add API key'}</span>
+              <span>{hasKey ? 'Key saved' : 'Add API key'}</span>
               {hasKey ? <Check size={13} /> : <Plus size={13} />}
             </button>
             <Link href="/forge" className="button primary topbar-build">

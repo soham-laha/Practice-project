@@ -1,6 +1,6 @@
 # TargetJEE deployment and operator guide
 
-Last verified: **16 November 2026, 07:10–07:12 UTC**. The owner has merged PR #4 and deployed the corrected backend. **The existing installation needs no further hosting action. Do not create a duplicate service or reuse the older TargetJEE product.**
+Deployed baseline verified: **16 November 2026, 07:10–07:12 UTC**; the later full public run is linked in the audit. The owner merged PR #4 and deployed that backend correction. **A newer application/security patch from the [final repository review](FINAL_REVIEW.md) is not deployed:** after review/merge, manually update the existing Render service and rebuild the dedicated Vercel frontend. Do not create duplicate services or reuse the older TargetJEE product.
 
 ## Live-host inventory
 
@@ -18,18 +18,18 @@ Last verified: **16 November 2026, 07:10–07:12 UTC**. The owner has merged PR 
 
 The frontend remains on the connected deployment above: PR #4 changed backend execution budgets, tests and documentation, not the frontend application. A second frontend deployment was neither needed nor performed for that correction. Render source-push automatic deployment remains intentionally off. Future source commits do not imply that either host has changed revision.
 
-The old deadline failure is now cleared by real-host validation, not merely by a screenshot or green source CI. **Successful live Gemini extraction/coach is still untested.** The 20 MiB public-browser test proves multipart/CORS/CSP transport to the auth guard, not valid document decoding or a provider result. [AUDIT_REPORT.md](AUDIT_REPORT.md) distinguishes those scopes.
+The old deadline failure is now cleared by real-host validation, not merely by a screenshot or green source CI. **Successful live Gemini extraction/coach is still unverified; the later user screenshots demonstrate rejection/unreachable failures, not accepted generation.** The 20 MiB public-browser test proves multipart/CORS/CSP transport to the auth guard, not valid document decoding or a provider result. [AUDIT_REPORT.md](AUDIT_REPORT.md) distinguishes those scopes.
 
-The older repository, `targetjee-engine` Vercel project and Railway backend are not reused or changed. PRs #1–#4 are merged into this repository's `main`. The current maintenance branch changes only verification scripts/tests and evidence; merging that maintenance does **not** require another Render or Vercel deployment.
+The older repository, `targetjee-engine` Vercel project and Railway backend are not reused or changed. PRs #1–#5 are merged into this repository's `main`. PR #5 changed only verification scripts/tests and evidence and needed no deployment. The subsequent final-review branch changes application code and Pillow; it **does** need backend/frontend deployment to reach production.
 
-## Completed follow-through and the screenshot's red check
+## Completed PR #4 follow-through and the earlier red-check screenshot
 
 - PR #4 was merged as `0a8022f` and manually deployed to the existing Render service; the screenshot's logs show it Live at about **07:05:24 UTC**.
 - The first main hosted-check attempt finished at **07:05:07 UTC**, before that deployment completed. It failed in the public-page/backend-availability step, so its browser/API/smoke steps were skipped. The inaccessible signed log archive does not establish its exact error text.
 - **[The same main run, attempt 2](https://github.com/soham-laha/Practice-project/actions/runs/43821189854), now PASSES** without an application-source change. It has no backend input, so its 13 reference browser cases pass while its three public API cases and two-service smoke are explicitly skipped.
 - **[The separate full run](https://github.com/soham-laha/Practice-project/actions/runs/43821911026)** supplied both live origins and passed all **16** browser/integration cases plus public HTTP smoke. This, not the reference-only rerun, clears the deployed validation/transport gate.
 
-No new URL, repeated Blueprint setup, paid upgrade or additional hosting deployment is required. No token or Gemini key needs to be sent in chat.
+No new URL, repeated Blueprint setup or paid upgrade is required. No further hosting action was needed for that PR #4 correction or the PR #5 evidence update; do not confuse that completed work with the newer application/security patch. No token or Gemini key needs to be sent in chat.
 
 ## GitHub About placement
 
@@ -63,7 +63,7 @@ TEST_BASE_URL=https://targetjee-studio.vercel.app \
 npm run test:e2e
 ```
 
-The **Hosted website verification** workflow accepts both origins. Select the current PR branch while changing checks; after merge, select `main`. Without a backend input it is intentionally a reference-frontend audit, not API acceptance. With both inputs, all 16 cases run: real health, both six-item certificate sets, keyless extraction/coach for both models, foreign/malformed origin rejection, exact multipart CORS, CSP/discovery agreement, a 20 MiB real-browser transport check and the 13 existing UI/accessibility/local-history cases. The UI coach response is explicitly mocked. The independent two-service HTTP smoke also runs.
+The **Hosted website verification** workflow accepts both origins. Select the current PR branch while changing checks; after merge, select `main`. Without a backend input it is intentionally a reference-frontend audit, not API acceptance. After both updated services are deployed, the current source suite runs **17 cases** with both inputs: real health, both six-item certificate sets, keyless extraction/coach for both models, foreign/malformed origin rejection, exact multipart CORS, CSP/discovery agreement, a 20 MiB real-browser transport check and 14 UI/accessibility/local-history/failure-state cases. The UI coach and image-rejection/timeout responses are explicitly mocked. The earlier 16-case public run used the older suite. Updated saved-key assertions require the updated frontend: do not dispatch this new suite against an old UI and call the mismatch a backend outage. The independent two-service HTTP smoke also runs.
 
 The large transport test sends a synthetic 20 MiB multipart file with an intentionally malformed key. The API rejects it **before file decoding or a provider call**. It proves the actual browser/host/body-parser path, not successful OCR, valid-image/PDF processing or a paid Gemini result. Browser security remains enabled. Reports/traces are retained as seven-day artifacts, with actionable browser assertion failures in GitHub Checks. Unit fixtures cannot append simulated public results to the real workflow summary.
 

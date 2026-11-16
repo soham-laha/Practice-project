@@ -110,7 +110,8 @@ def test_provider_has_total_wall_deadline_and_cancels_slow_transport(monkeypatch
         headers={"X-Gemini-Api-Key": KEY},
         json={"message": "Suggest a focused reference drill.", "context": "", "exam": "main"},
     )
-    assert response.status_code == 503
+    assert response.status_code == 504
+    assert "time limit" in response.json()["detail"]
     assert cancelled == [True]
     assert KEY not in response.text
     assert KEY not in caplog.text
