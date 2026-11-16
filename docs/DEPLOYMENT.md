@@ -9,15 +9,19 @@
 
 The complete credential-free Main/Advanced reference drill, review, recovery, flashcards and local backups are bundled in the frontend. **AI forge/coach are not available until a new backend is connected.** Saving a browser key does not create that missing service.
 
-## One owner-side action
+## Put the website in GitHub’s About panel
 
-[**Deploy the prepared new backend on Render**](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2Fsoham-laha%2FPractice-project%2Ftree%2Farena%2Fe36de462-practice-project)
+GitHub’s **About → Website** field is repository metadata, separate from README content and commits. Open the repository’s **Code** tab, click the gear beside **About**, paste `https://targetjee-studio.vercel.app` into **Website** (not Description), and save. Refresh the page to see the clickable site link in the right sidebar. The current GitHub integration can publish code but returned HTTP 403 when attempting to change this setting, so the owner must save it in GitHub’s UI.
+
+## Deploy the new backend
+
+[**Deploy the prepared new backend on Render**](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2Fsoham-laha%2FPractice-project)
 
 1. Sign in to Render yourself. Review the Blueprint for **`targetjee-studio-api`** and approve it in your own account. It requests the `free` service plan, not a paid upgrade; Render controls current plan availability and any signup requirements. Do not approve replacing any existing service.
 2. The repository-root Blueprint already selects `backend/Dockerfile`, root build context, `/health`, `TARGETJEE_REQUIRE_HTTPS=true` and **`TARGETJEE_FRONTEND_ORIGINS=https://targetjee-studio.vercel.app`**. Only the non-sensitive GET health probe may arrive internally over plain HTTP; API routes and every POST remain HTTPS-only. Automatic deploys on source pushes are off so a public deploy-button instance does not update without review.
 3. When deployment succeeds, send **only its public HTTPS origin** back to the agent. Open `<that-origin>/health` to see `status: "ok"`, `schema: "targetjee.item.v2"` and `persistence: "none"`. Do not send passwords, tokens or a Gemini key.
 
-The link intentionally selects this session's published follow-up branch. Keep that branch while the Blueprint references it, or explicitly update the Render branch setting to `main` after merging the fixes. Do not rename/switch the Arena working branch to accomplish deployment.
+PR #2 is now merged. The deploy link uses the repository’s default **`main`** branch, which contains the verified backend fixes. Confirm **`main`** in Render; do not select an old Arena branch. Changing the hosting service’s branch setting does not require renaming or switching the Arena working branch.
 
 This user interaction is necessary because the connected app can deploy Vercel but cannot create a Render/Railway service. The agent does not have those hosting credentials, and GitHub permissions do not supply them. No token needs to be pasted into chat.
 
@@ -31,7 +35,7 @@ If you prefer Railway, create a **new** service from the authorized repository/b
 2. Set server-only `TARGETJEE_API_BASE_URL` on the **dedicated new Vercel project** to the verified HTTPS origin. No API key belongs in an environment variable or any `NEXT_PUBLIC_*` field.
 3. Rebuild/redeploy the frontend, rather than only changing a runtime variable: its Content Security Policy is generated at build time. Confirm `connect-src` and `/api/engine/upload-target` agree on the same fixed origin.
 4. Verify both model names return 401 without a key through the deployed frontend, malformed/foreign origins are rejected and HTTPS redirects never receive a request-scoped key. Check exact CORS for the public frontend, including the multipart preflight.
-5. Run the hosted browser suite and `SMOKE_FRONTEND_URL=<actual-frontend> SMOKE_BACKEND_URL=<actual-backend> npm run smoke` from a network that can reach both public hosts. The manual `Hosted website verification` workflow becomes dispatchable after it exists on the default branch. No real key is used by those automated tests; mocked coach transport is labelled as such.
+5. Run the hosted browser suite and `SMOKE_FRONTEND_URL=<actual-frontend> SMOKE_BACKEND_URL=<actual-backend> npm run smoke` from a network that can reach both public hosts. The manual `Hosted website verification` workflow is now available on `main` under **Actions → Hosted website verification → Run workflow**. No real key is used by those automated tests; mocked coach transport is labelled as such.
 6. Exercise a 20 MB public upload/CORS path and an authorized BYOK provider request before claiming those gates passed. Never log/store a real key or put it in a URL, request body, workflow input or artifact. A provider-free transport rejection check is not successful AI extraction.
 7. Update the audit with deployment IDs, exact commit, real URLs, test-run links and any remaining unverified behavior.
 

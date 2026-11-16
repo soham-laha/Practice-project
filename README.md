@@ -4,7 +4,7 @@
 
 Turn a textbook problem into a timed, four-option drill. Understand why a wrong answer looked right, find the first invalid pivot, test a counterfactual, and close the loop with a 45-second recovery check. Or start with the complete built-in reference experience—no account, API key or running AI service needed.
 
-> **Public reference website: [targetjee-studio.vercel.app](https://targetjee-studio.vercel.app).** The new frontend is deployed; the AI forge/coach still require the separate backend deployment. PR #1 published the implementation to `main`; [PR #2](https://github.com/soham-laha/Practice-project/pull/2) contains follow-up fixes. Both Node 22/26 + Python 3.12 CI jobs passed. See [the repository investigation](docs/REPOSITORY_REVIEW.md), [verification evidence](docs/AUDIT_REPORT.md) and [the remaining backend handoff](docs/DEPLOYMENT.md). This is not yet full production acceptance. The older TargetJEE product remains untouched.
+> **Deployment status:** the reference frontend is deployed. Use the **Website** field in this repository’s **About** panel for the public site; the URL is intentionally not duplicated in this README. The AI forge/coach still require the separate backend deployment. PR #1 and [PR #2](https://github.com/soham-laha/Practice-project/pull/2) are merged into `main`, and both Node 22/26 + Python 3.12 CI jobs passed. See [the repository investigation](docs/REPOSITORY_REVIEW.md), [verification evidence](docs/AUDIT_REPORT.md) and [the remaining backend handoff](docs/DEPLOYMENT.md). This is not yet full production acceptance. The older TargetJEE product remains untouched.
 
 ## What’s included
 
@@ -74,7 +74,7 @@ npm audit --audit-level=low
 
 The Linux test browser and libraries come from `@sparticuz/chromium` via npm, avoiding an extra browser-CDN download. Tests use Playwright + axe across **375 / 768 / 1440 pixels × all three themes**, six routes, explicit enhanced-contrast scans in High Contrast, and real Main/Advanced drill/repair/BYOK/export/reset/import/isolation flows. `scripts/browser.mjs` configures the bundled libraries without disabling browser web security. Browser screenshots/reports are generated into ignored directories; they are not committed artifacts.
 
-CI uses Python **3.12** and Node **22 / 26**. The health endpoint and local reference workflow can be exercised independently of Google availability. `hosted.yml` separately audits the actual public frontend, including its browser workflows and original font notices; it explicitly does **not** treat an unconfigured backend as full production acceptance. Once merged into the default branch it also supports manual dispatch with real frontend/backend origins. The normal quality workflow additionally builds and exercises the root-context, non-root backend container on Node 22.
+CI uses Python **3.12** and Node **22 / 26**. The health endpoint and local reference workflow can be exercised independently of Google availability. `hosted.yml` separately audits the actual public frontend, including its browser workflows and original font notices; it explicitly does **not** treat an unconfigured backend as full production acceptance. It is now available on `main` for manual dispatch with real frontend/backend origins. The normal quality workflow additionally builds and exercises the root-context, non-root backend container on Node 22.
 
 ## BYOK privacy
 
@@ -105,19 +105,19 @@ The latest user instruction explicitly authorizes committing and pushing this im
 
 ### Backend (Render or Railway)
 
-[Deploy the new isolated backend on Render](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2Fsoham-laha%2FPractice-project%2Ftree%2Farena%2Fe36de462-practice-project). Review and approve the `targetjee-studio-api` Blueprint in your own Render account, then provide only its public HTTPS origin—never a token or Gemini key. The prepared Blueprint sets the exact new frontend origin and disables push-triggered automatic deployment. See [the handoff](docs/DEPLOYMENT.md).
+[Deploy the new isolated backend on Render](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2Fsoham-laha%2FPractice-project). Review and approve the `targetjee-studio-api` Blueprint in your own Render account, then provide only its public HTTPS origin—never a token or Gemini key. The prepared Blueprint sets the exact new frontend origin and disables push-triggered automatic deployment. See [the handoff](docs/DEPLOYMENT.md).
 
 - Build `backend/Dockerfile` with **root build context** so `data/` is copied.
 - The image uses Python 3.12, a non-root user and `${PORT:-8000}`.
 - `render.yaml` and `backend/railway.toml` are provided.
-- Set `TARGETJEE_FRONTEND_ORIGINS=https://targetjee-studio.vercel.app` (already set by the Render Blueprint; exact origin, no wildcard).
+- Set `TARGETJEE_FRONTEND_ORIGINS` to the exact frontend origin listed in **About → Website** (already set by the Render Blueprint; no wildcard).
 - Set `TARGETJEE_REQUIRE_HTTPS=true` behind a trusted TLS-terminating proxy. Only credential-free GET `/health` is exempt for private internal health probes; API requests and all POSTs still require HTTPS.
 - Verify `https://your-new-api-host/health` returns 200 before wiring the frontend.
 - Hosting free tiers, cold starts and usage fees depend on the provider’s current plan. No paid services were enabled by this build.
 
 ### Frontend (Vercel)
 
-- The dedicated `targetjee-studio` project is deployed at **https://targetjee-studio.vercel.app**, with repository-root Next.js, Node 26, `npm ci` and `npm run build`. Do not use the older project.
+- The dedicated `targetjee-studio` project is deployed; its public address belongs in **About → Website**. It uses repository-root Next.js, Node 26, `npm ci` and `npm run build`. Do not use the older project.
 - Set server-only `TARGETJEE_API_BASE_URL=https://your-new-api-host`.
 - Deploy production and verify `/`, `/simulator`, `/dashboard`, both exam modes, direct HTTPS file uploads and local persistence. Exact backend CORS must include this new frontend origin.
 - Run `SMOKE_FRONTEND_URL=https://your-new-frontend SMOKE_BACKEND_URL=https://your-new-api npm run smoke` against the real hosts; placeholder URLs above are not deployments.
