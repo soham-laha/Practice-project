@@ -51,8 +51,13 @@ validation_queue = asyncio.Semaphore(2)
 
 @app.middleware("http")
 async def request_guard(request: Request, call_next):
+    # Hosts may probe the container over private cleartext HTTP before TLS-edge
+    # routing is enabled. Only this credential-free GET is exempt; never relax
+    # transport checks for a POST or an API route to make readiness pass.
+    internal_health_probe = request.method == "GET" and request.url.path == "/health"
     if (
         os.getenv("TARGETJEE_REQUIRE_HTTPS", "false").lower() == "true"
+        and not internal_health_probe
         and request.headers.get("x-forwarded-proto", request.url.scheme) != "https"
     ):
         return JSONResponse({"detail": "HTTPS required"}, status_code=400)

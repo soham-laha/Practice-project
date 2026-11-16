@@ -21,6 +21,41 @@ def test_health_and_both_seed_modes():
     assert client.get("/v1/reference?exam=neet").status_code == 422
 
 
+def test_production_health_accepts_internal_http_probe(monkeypatch):
+    monkeypatch.setenv("TARGETJEE_REQUIRE_HTTPS", "true")
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json()["persistence"] == "none"
+    assert response.headers["cache-control"] == "no-store"
+    # Query strings cannot turn this into a credential-processing endpoint.
+    assert client.get("/health?probe=ready").status_code == 200
+
+
+def test_production_http_api_is_rejected_before_processing_credentials(monkeypatch):
+    monkeypatch.setenv("TARGETJEE_REQUIRE_HTTPS", "true")
+    for path in ("/v1/extractions", "/v1/extractions/upload", "/v1/coach", "/health"):
+        response = client.post(path, headers={"X-Gemini-Api-Key": KEY}, json={"text": KEY})
+        assert response.status_code == 400
+        assert response.json() == {"detail": "HTTPS required"}
+        assert KEY not in response.text
+    assert client.get("/v1/reference").status_code == 400
+
+
+def test_production_trusted_proxy_or_native_https_allows_key_gating(monkeypatch):
+    monkeypatch.setenv("TARGETJEE_REQUIRE_HTTPS", "true")
+    payload = {"text": "A complete textbook problem is here.", "exam": "main"}
+    for url, headers in (
+        ("/v1/extractions", {"X-Forwarded-Proto": "https"}),
+        ("https://testserver/v1/extractions", {}),
+    ):
+        response = client.post(url, headers=headers, json=payload)
+        assert response.status_code == 401
+        assert "Gemini key" in response.json()["detail"]
+    response = client.get("/v1/reference", headers={"X-Forwarded-Proto": "https"})
+    assert response.status_code == 200
+    assert len(response.json()["items"]) == 6
+
+
 def test_strict_cors():
     good = client.options(
         "/v1/extractions",

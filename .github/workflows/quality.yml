@@ -4,46 +4,108 @@ on:
   pull_request:
 permissions:
   contents: read
+concurrency:
+  group: quality-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    name: Verify · Node ${{ matrix.node }} / Python 3.12
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['22', '26']
     env:
       NEXT_TELEMETRY_DISABLED: '1'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 · Node 24 action runtime
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '22'
+          node-version: ${{ matrix.node }}
           cache: npm
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.12'
           cache: pip
           cache-dependency-path: backend/requirements*.txt
-      - run: npm ci
-      - run: python -m pip install -r backend/requirements-dev.txt
+      - name: Install JavaScript dependencies
+        run: npm ci
+      - name: Install Python dependencies
+        run: python -m pip install -r backend/requirements-dev.txt
       - name: 1 · Static and production build
-        run: npm run lint && npm run typecheck && python -m ruff check backend && python -m ruff format --check backend && npx prettier --check . && npm run build
+        run: |
+          npm run lint
+          npm run typecheck
+          python -m ruff check backend
+          python -m ruff format --check backend
+          npx prettier --check .
+          npm run build
       - name: 2 · Equations, symbolic guardrails and contracts
-        run: python -m pytest backend/tests -q -W error && npm test && npm audit --audit-level=low && python -m pip check
+        run: |
+          python -m pytest backend/tests -q -W error
+          npm test
+          npm audit --audit-level=low
+          python -m pip check
       - name: 3 · Research, palette and font audit
         run: npm run audit:design
       - name: 4 · Start production-mode services
         run: |
-          uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --no-access-log > /tmp/targetjee-api.log 2>&1 &
+          python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --no-access-log > /tmp/targetjee-api.log 2>&1 &
           TARGETJEE_API_BASE_URL=http://127.0.0.1:8000 npm start > /tmp/targetjee-web.log 2>&1 &
-          npx wait-on http://127.0.0.1:3000 http://127.0.0.1:8000/health --timeout 60000
+          # FastAPI's GET /health does not implement HEAD. wait-on's plain
+          # http:// scheme probes with HEAD and otherwise times out on 405.
+          npx wait-on http-get://127.0.0.1:3000 http-get://127.0.0.1:8000/health --timeout 60000 --log
       - name: 5 · Responsive, accessible, isolated local workflows
         run: npm run test:e2e
       - name: 6 · Production-mode local HTTP smoke
         run: npm run smoke
-      - uses: actions/upload-artifact@v4
+      - name: 7 · Root-context non-root Python 3.12 container
+        if: matrix.node == '22'
+        run: |
+          docker build --pull --tag targetjee-studio-api:ci --file backend/Dockerfile .
+          docker run --detach --name targetjee-studio-api-ci --read-only --tmpfs /tmp:rw,noexec,nosuid,size=32m --memory 512m --pids-limit 64 --env TARGETJEE_REQUIRE_HTTPS=true --publish 127.0.0.1:8001:8000 targetjee-studio-api:ci
+          npx wait-on http-get://127.0.0.1:8001/health --timeout 60000 --log
+          docker exec targetjee-studio-api-ci python -c 'import os,sys,pathlib; assert os.geteuid() != 0; assert sys.version_info[:2] == (3,12); assert "MIT License" in pathlib.Path("/app/LICENSE").read_text()'
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          const blocked = await fetch('http://127.0.0.1:8001/v1/reference');
+          assert.equal(blocked.status, 400, 'Only GET /health may bypass TLS for an internal probe');
+          const headers = { 'X-Forwarded-Proto': 'https' };
+          for (const exam of ['main', 'advanced']) {
+            const response = await fetch(`http://127.0.0.1:8001/v1/reference?exam=${exam}`, { headers });
+            assert.equal(response.status, 200);
+            const { items } = await response.json();
+            assert.equal(items.length, 6);
+            const validation = await fetch('http://127.0.0.1:8001/v1/items/validate', {
+              method: 'POST',
+              headers: { ...headers, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ items }),
+            });
+            assert.equal(validation.status, 200);
+            const { results } = await validation.json();
+            assert.equal(results.length, 6);
+            assert(results.every(result => result.valid));
+          }
+          JS
+      - name: Preserve container diagnostics and stop the test container
+        if: always() && matrix.node == '22'
+        run: |
+          if docker inspect targetjee-studio-api-ci >/dev/null 2>&1; then
+            docker logs targetjee-studio-api-ci > /tmp/targetjee-container.log 2>&1
+            docker rm --force targetjee-studio-api-ci
+          fi
+      - name: Preserve browser evidence and service diagnostics
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
-          name: browser-audit
+          name: browser-audit-node-${{ matrix.node }}
           path: |
             playwright-report
             test-results
             artifacts
+            /tmp/targetjee-api.log
+            /tmp/targetjee-web.log
+            /tmp/targetjee-container.log
+          if-no-files-found: ignore
           retention-days: 7
