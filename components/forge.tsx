@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -27,7 +27,7 @@ import { KEYS } from '@/lib/storage';
 export function Forge() {
   const { exam, model, setModel, hasKey, setKeyModal } = useApp(),
     router = useRouter();
-  const [generatorMode, setGeneratorMode] = useState<'local' | 'cloud'>('cloud'),
+  const [userEngineMode, setUserEngineMode] = useState<'local' | 'cloud' | null>(null),
     [tab, setTab] = useState<'text' | 'image' | 'pdf'>('text'),
     [text, setText] = useState(''),
     [file, setFile] = useState<File | null>(null),
@@ -40,10 +40,7 @@ export function Forge() {
     [checking, setChecking] = useState(false),
     [items, setItems] = useState<Item[]>([]);
 
-  useEffect(() => {
-    if (!hasKey) setGeneratorMode('local');
-    else setGeneratorMode('cloud');
-  }, [hasKey]);
+  const generatorMode = userEngineMode ?? (hasKey ? 'cloud' : 'local');
   function chooseFile(f: File | undefined) {
     setError('');
     setFailure(null);
@@ -275,7 +272,7 @@ export function Forge() {
                 id="generator-engine"
                 value={generatorMode}
                 onChange={(e) => {
-                  setGeneratorMode(e.target.value as 'local' | 'cloud');
+                  setUserEngineMode(e.target.value as 'local' | 'cloud');
                   setItems([]);
                 }}
                 disabled={busy}
