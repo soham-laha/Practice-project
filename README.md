@@ -4,7 +4,7 @@
 
 Turn a textbook problem into a timed, four-option drill. Understand why a wrong answer looked right, find the first invalid pivot, test a counterfactual, and close the loop with a 45-second recovery check. Or start with the complete built-in reference experience—no account, API key or running AI service needed.
 
-> **Status:** the implementation is published in **[soham-laha/Practice-project](https://github.com/soham-laha/Practice-project)** and PR #1 was merged into `main`. Follow-up fixes use the current Arena working branch and a new pull request, without rewriting history. See [the repository investigation](docs/REPOSITORY_REVIEW.md) for the failed CI startup probe, attribution and license review, and [the audit report](docs/AUDIT_REPORT.md) for verification/deployment evidence. Source publication is not a public application deployment. The older TargetJEE product remains untouched.
+> **Public reference website: [targetjee-studio.vercel.app](https://targetjee-studio.vercel.app).** The new frontend is deployed; the AI forge/coach still require the separate backend deployment. PR #1 published the implementation to `main`; [PR #2](https://github.com/soham-laha/Practice-project/pull/2) contains follow-up fixes. Both Node 22/26 + Python 3.12 CI jobs passed. See [the repository investigation](docs/REPOSITORY_REVIEW.md), [verification evidence](docs/AUDIT_REPORT.md) and [the remaining backend handoff](docs/DEPLOYMENT.md). This is not yet full production acceptance. The older TargetJEE product remains untouched.
 
 ## What’s included
 
@@ -23,7 +23,7 @@ Turn a textbook problem into a timed, four-option drill. Understand why a wrong 
 
 ## Run locally
 
-Prerequisites: Node **22.12+**, npm and Python **3.12** (the Docker/CI target). The sandbox uses Python 3.11.2 because standalone 3.12 downloads were blocked. GitHub has successfully run the installation, static/build and unit-contract gates with Python 3.12; the original workflow then failed on a HEAD-versus-GET readiness mismatch, not those test gates. The corrected workflow tests Node 22 and 26 with Python 3.12. No Gemini key is needed for the reference simulator/review/cards.
+Prerequisites: Node **22.12+**, npm and Python **3.12** (the Docker/CI target). The sandbox uses Python 3.11.2 because standalone 3.12 downloads were blocked. The corrected workflow has now passed all installation, static/build, unit, design, browser and local HTTP gates on GitHub with Node 22 and 26 and Python 3.12. The original failure was a HEAD-versus-GET readiness mismatch, not a broken API startup. No Gemini key is needed for the reference simulator/review/cards.
 
 ```bash
 npm ci
@@ -74,7 +74,7 @@ npm audit --audit-level=low
 
 The Linux test browser and libraries come from `@sparticuz/chromium` via npm, avoiding an extra browser-CDN download. Tests use Playwright + axe across **375 / 768 / 1440 pixels × all three themes**, six routes, explicit enhanced-contrast scans in High Contrast, and real Main/Advanced drill/repair/BYOK/export/reset/import/isolation flows. `scripts/browser.mjs` configures the bundled libraries without disabling browser web security. Browser screenshots/reports are generated into ignored directories; they are not committed artifacts.
 
-CI uses Python **3.12** and runs the same gates. The health endpoint and local reference workflow can be exercised independently of Google availability.
+CI uses Python **3.12** and Node **22 / 26**. The health endpoint and local reference workflow can be exercised independently of Google availability. `hosted.yml` separately audits the actual public frontend, including its browser workflows and original font notices; it explicitly does **not** treat an unconfigured backend as full production acceptance. Once merged into the default branch it also supports manual dispatch with real frontend/backend origins. The normal quality workflow additionally builds and exercises the root-context, non-root backend container on Node 22.
 
 ## BYOK privacy
 
@@ -105,21 +105,23 @@ The latest user instruction explicitly authorizes committing and pushing this im
 
 ### Backend (Render or Railway)
 
+[Deploy the new isolated backend on Render](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2Fsoham-laha%2FPractice-project%2Ftree%2Farena%2Fe36de462-practice-project). Review and approve the `targetjee-studio-api` Blueprint in your own Render account, then provide only its public HTTPS origin—never a token or Gemini key. The prepared Blueprint sets the exact new frontend origin and disables push-triggered automatic deployment. See [the handoff](docs/DEPLOYMENT.md).
+
 - Build `backend/Dockerfile` with **root build context** so `data/` is copied.
 - The image uses Python 3.12, a non-root user and `${PORT:-8000}`.
 - `render.yaml` and `backend/railway.toml` are provided.
-- Set `TARGETJEE_FRONTEND_ORIGINS=https://your-new-frontend.vercel.app` (exact origin, no wildcard).
+- Set `TARGETJEE_FRONTEND_ORIGINS=https://targetjee-studio.vercel.app` (already set by the Render Blueprint; exact origin, no wildcard).
 - Set `TARGETJEE_REQUIRE_HTTPS=true` behind a trusted TLS-terminating proxy.
 - Verify `https://your-new-api-host/health` returns 200 before wiring the frontend.
 - Hosting free tiers, cold starts and usage fees depend on the provider’s current plan. No paid services were enabled by this build.
 
 ### Frontend (Vercel)
 
-- New Next.js project, repository root, Node 22.12+, `npm ci`, `npm run build`.
+- The dedicated `targetjee-studio` project is deployed at **https://targetjee-studio.vercel.app**, with repository-root Next.js, Node 26, `npm ci` and `npm run build`. Do not use the older project.
 - Set server-only `TARGETJEE_API_BASE_URL=https://your-new-api-host`.
 - Deploy production and verify `/`, `/simulator`, `/dashboard`, both exam modes, direct HTTPS file uploads and local persistence. Exact backend CORS must include this new frontend origin.
 - Run `SMOKE_FRONTEND_URL=https://your-new-frontend SMOKE_BACKEND_URL=https://your-new-api npm run smoke` against the real hosts; placeholder URLs above are not deployments.
-- The connected Vercel connector has first-deployment limitations documented in the audit report; a created project alone is not a successful deployment.
+- The initial production deployment is READY and the public alias serves the application without authentication. The backend is still unconfigured, so the forge/coach return an explicit unavailable response; adding a key alone cannot provision the missing service. Vercel Functions have a 4.5 MB body cap, so hosting this API there unchanged would not satisfy the 20 MB upload requirement.
 
 ## Mathematical and product limits
 

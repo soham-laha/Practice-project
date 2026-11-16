@@ -1,5 +1,6 @@
-# The backend image needs only application code, pinned requirements and seeds.
+# Keep the backend context minimal while preserving its application license.
 **
+!LICENSE
 !backend/
 !backend/**
 !data/

@@ -66,7 +66,7 @@ jobs:
           docker build --pull --tag targetjee-studio-api:ci --file backend/Dockerfile .
           docker run --detach --name targetjee-studio-api-ci --read-only --tmpfs /tmp:rw,noexec,nosuid,size=32m --memory 512m --pids-limit 64 --publish 127.0.0.1:8001:8000 targetjee-studio-api:ci
           npx wait-on http-get://127.0.0.1:8001/health --timeout 60000 --log
-          docker exec targetjee-studio-api-ci python -c 'import os,sys; assert os.geteuid() != 0; assert sys.version_info[:2] == (3,12)'
+          docker exec targetjee-studio-api-ci python -c 'import os,sys,pathlib; assert os.geteuid() != 0; assert sys.version_info[:2] == (3,12); assert "MIT License" in pathlib.Path("/app/LICENSE").read_text()'
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
           for (const exam of ['main', 'advanced']) {
