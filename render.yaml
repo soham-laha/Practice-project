@@ -5,9 +5,12 @@ services:
     dockerfilePath: ./backend/Dockerfile
     dockerContext: .
     plan: free
+    # Review and deploy future revisions explicitly rather than updating every
+    # service created from the public Deploy to Render link on each push.
+    autoDeployTrigger: 'off'
     healthCheckPath: /health
     envVars:
       - key: TARGETJEE_FRONTEND_ORIGINS
-        sync: false
+        value: https://targetjee-studio.vercel.app
       - key: TARGETJEE_REQUIRE_HTTPS
         value: 'true'

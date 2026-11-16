@@ -60,6 +60,38 @@ jobs:
         run: npm run test:e2e
       - name: 6 · Production-mode local HTTP smoke
         run: npm run smoke
+      - name: 7 · Root-context non-root Python 3.12 container
+        if: matrix.node == '22'
+        run: |
+          docker build --pull --tag targetjee-studio-api:ci --file backend/Dockerfile .
+          docker run --detach --name targetjee-studio-api-ci --read-only --tmpfs /tmp:rw,noexec,nosuid,size=32m --memory 512m --pids-limit 64 --publish 127.0.0.1:8001:8000 targetjee-studio-api:ci
+          npx wait-on http-get://127.0.0.1:8001/health --timeout 60000 --log
+          docker exec targetjee-studio-api-ci python -c 'import os,sys; assert os.geteuid() != 0; assert sys.version_info[:2] == (3,12)'
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          for (const exam of ['main', 'advanced']) {
+            const response = await fetch(`http://127.0.0.1:8001/v1/reference?exam=${exam}`);
+            assert.equal(response.status, 200);
+            const { items } = await response.json();
+            assert.equal(items.length, 6);
+            const validation = await fetch('http://127.0.0.1:8001/v1/items/validate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ items }),
+            });
+            assert.equal(validation.status, 200);
+            const { results } = await validation.json();
+            assert.equal(results.length, 6);
+            assert(results.every(result => result.valid));
+          }
+          JS
+      - name: Preserve container diagnostics and stop the test container
+        if: always() && matrix.node == '22'
+        run: |
+          if docker inspect targetjee-studio-api-ci >/dev/null 2>&1; then
+            docker logs targetjee-studio-api-ci > /tmp/targetjee-container.log 2>&1
+            docker rm --force targetjee-studio-api-ci
+          fi
       - name: Preserve browser evidence and service diagnostics
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
@@ -71,5 +103,6 @@ jobs:
             artifacts
             /tmp/targetjee-api.log
             /tmp/targetjee-web.log
+            /tmp/targetjee-container.log
           if-no-files-found: ignore
           retention-days: 7
