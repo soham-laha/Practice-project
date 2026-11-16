@@ -111,7 +111,7 @@ The latest user instruction explicitly authorizes committing and pushing this im
 - The image uses Python 3.12, a non-root user and `${PORT:-8000}`.
 - `render.yaml` and `backend/railway.toml` are provided.
 - Set `TARGETJEE_FRONTEND_ORIGINS=https://targetjee-studio.vercel.app` (already set by the Render Blueprint; exact origin, no wildcard).
-- Set `TARGETJEE_REQUIRE_HTTPS=true` behind a trusted TLS-terminating proxy.
+- Set `TARGETJEE_REQUIRE_HTTPS=true` behind a trusted TLS-terminating proxy. Only credential-free GET `/health` is exempt for private internal health probes; API requests and all POSTs still require HTTPS.
 - Verify `https://your-new-api-host/health` returns 200 before wiring the frontend.
 - Hosting free tiers, cold starts and usage fees depend on the provider’s current plan. No paid services were enabled by this build.
 
