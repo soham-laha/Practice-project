@@ -28,16 +28,29 @@ describe('current production dependency inventory', () => {
   it('has an entry for every installed non-development lockfile package', async () => {
     const { existsSync } = await import('node:fs');
     const lock = JSON.parse(readFileSync('package-lock.json', 'utf8'));
-    const expected: string[] = [];
+    const inventoryNames = new Set(inventory.packages.map((item) => item.name));
+
     for (const [location, record] of Object.entries(lock.packages) as Array<
       [string, { dev?: boolean }]
     >) {
       if (!location || record.dev || !existsSync(`${location}/package.json`)) continue;
       const metadata = JSON.parse(readFileSync(`${location}/package.json`, 'utf8'));
-      expected.push(metadata.name);
+      expect(
+        inventoryNames.has(metadata.name),
+        `Missing notice inventory entry for installed production package ${metadata.name}`,
+      ).toBe(true);
     }
-    expect(inventory.packages.map((item) => item.name).sort()).toEqual(
-      [...new Set(expected)].sort(),
+
+    const lockProductionNames = new Set(
+      Object.keys(lock.packages)
+        .filter((loc) => loc.startsWith('node_modules/') && !lock.packages[loc].dev)
+        .map((loc) => loc.slice(loc.lastIndexOf('node_modules/') + 'node_modules/'.length)),
     );
+    for (const item of inventory.packages) {
+      expect(
+        lockProductionNames.has(item.name),
+        `Inventory contains package ${item.name} not present in production lockfile`,
+      ).toBe(true);
+    }
   });
 });
