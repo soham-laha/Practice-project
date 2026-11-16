@@ -2,6 +2,8 @@
 .venv
 .cache
 .arena
+.agents
+.hallmark
 node_modules
 artifacts
 playwright-report

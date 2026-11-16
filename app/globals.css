@@ -12,6 +12,7 @@
   --clay: #a0432b;
   --plum: #6b4978;
   --line: #dce1d5;
+  --control-line: #798673;
   --glass: rgba(255, 255, 255, 0.82);
   --shadow: 0 8px 36px rgba(40, 57, 34, 0.035);
   --hero: #e6ecd9;
@@ -34,6 +35,7 @@
   --clay: #ffb79c;
   --plum: #d9bce5;
   --line: #3b4a3c;
+  --control-line: #879780;
   --glass: rgba(29, 40, 32, 0.88);
   --shadow: 0 8px 36px rgba(0, 0, 0, 0.1);
   --hero: #2d3b29;
@@ -55,6 +57,7 @@
   --clay: #ffbda8;
   --plum: #f0ccff;
   --line: #ffffff;
+  --control-line: #ffffff;
   --glass: #080808;
   --shadow: none;
   --hero: #080808;
@@ -157,7 +160,7 @@ input,
 textarea,
 select {
   width: 100%;
-  border: 1px solid var(--line);
+  border: 1px solid var(--control-line);
   border-radius: 11px;
   background: var(--surface);
   padding: 12px 14px;
@@ -726,6 +729,7 @@ textarea {
   margin-bottom: 9px;
 }
 .exam-select {
+  flex-shrink: 0;
   padding: 4px;
   background: var(--surface);
   border: 1px solid var(--line);
@@ -734,6 +738,7 @@ textarea {
   gap: 2px;
 }
 .exam-select button {
+  white-space: nowrap;
   font-size: 10px;
   font-weight: 700;
   padding: 8px 12px;
@@ -1550,6 +1555,7 @@ textarea {
 }
 .split-heading {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 20px;

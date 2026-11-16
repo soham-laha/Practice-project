@@ -4,25 +4,31 @@ Date: **16 November 2026**. Source quality, local services, real-host transport 
 
 ## Current result
 
+**Latest source audit:** [FINAL_REVIEW.md](FINAL_REVIEW.md) records the review of `main` merge `6b0e358e` (PR #5) on `arena/33825016-practice-project`: Pillow 13.0.0/security gate, constrained Gemini JSON/error handling, honest saved-key state, reset and form-boundary fixes, plus Hallmark installation/audit. These are **application changes, not deployed yet**. Fresh local results: **107 backend / 83 frontend tests, 14 browser cases (3 public-only skips), production build, local smoke and zero known npm/PyPI advisories**. [DESIGN_TOOLING.md](DESIGN_TOOLING.md) records the deliberately non-passing Hallmark audit. Successful real Gemini remains unresolved; the user supplied real rejection/unreachable screenshots.
+
+The public-host results below describe the **older deployed baseline**, not acceptance of the latest source patch. A backend deployment and frontend rebuild will be needed to ship this review after merge; the older “no deployment needed” maintenance statements refer specifically to PR #4/#5.
+
+### Deployed baseline
+
 **Website: https://targetjee-studio.vercel.app**
 
 **New API: https://targetjee-studio-api.onrender.com**
 
 The owner merged PR #4 and manually deployed the corrected backend as `main` merge **`0a8022f3190c4f69cbe11bbd8c80cd9b1fb9b7ff`**. **Provider-free deployed gates now PASS:** both complete six-item symbolic-validation batches, all **16** real-host browser/integration cases and two-service public HTTP smoke. The dedicated Vercel frontend remains connected with coherent CSP/upload discovery. GitHub **About → Website** is correct, intentionally not duplicated in README. **No further hosting action is needed for this correction.**
 
-**`ALL_GATES_PASS = false` remains the full-product result solely because successful live Gemini extraction/coach acceptance is untested.** No authorized real key or provider spend was used. The old deployed validation timeout is now cleared by real public tests, but keyless/malformed-key checks and mocked coach UI responses must not be presented as successful AI generation.
+**`ALL_GATES_PASS = false` remains the full-product result because successful live Gemini extraction/coach acceptance is unresolved.** No authorized real key or provider spend was used. The old deployed validation timeout is now cleared by real public tests, but keyless/malformed-key checks and mocked coach UI responses must not be presented as successful AI generation.
 
 ### Release identities
 
-| Resource                      | Verified identity / state                                                                                                                                                                 |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Repository / default branch   | `soham-laha/Practice-project` / `main`; PRs #1–#4 merged, latest merge `0a8022f3190c4f69cbe11bbd8c80cd9b1fb9b7ff`                                                                         |
-| Active follow-through branch  | `arena/87a6e186-practice-project`, based on merged `0a8022f`; post-deployment evidence and verification-only maintenance                                                                  |
-| Dedicated Vercel project      | `targetjee-studio` / `prj_KFXNcBKpCvyPcT5VJFU6f7gH07I2`; not the older product                                                                                                            |
-| Connected production frontend | **READY / PROMOTED**, `dpl_5StVSw6YN4zin3oY83XxWpXvpS89`, application commit `6a0f4ce`, Node 26                                                                                           |
-| Frontend API configuration    | Production-only server-side `TARGETJEE_API_BASE_URL=https://targetjee-studio-api.onrender.com`; configured **before** rebuilding, so CSP and runtime discovery agree                      |
-| New Render service            | Owner screenshot: existing `targetjee-studio-api`, Free/Docker, manual `main` merge `0a8022f`, Live; health and all 12 reference certificates independently verified over HTTPS           |
-| Corrected backend source      | `416ddaa62a260e18126af60b96ff1237fa4f833d`, merged via [PR #4](https://github.com/soham-laha/Practice-project/pull/4) as `0a8022f` and now deployed; no additional Render deploy required |
+| Resource                      | Verified identity / state                                                                                                                                                                                           |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Repository / default branch   | `soham-laha/Practice-project` / `main`; PRs #1–#5 merged, latest merge `6b0e358e246ce5630cff59c8ad4b09c0b0c6210e`                                                                                                   |
+| Active follow-through branch  | `arena/33825016-practice-project`, based on merged `6b0e358e`; final application/security/design-tooling review, not yet deployed                                                                                   |
+| Dedicated Vercel project      | `targetjee-studio` / `prj_KFXNcBKpCvyPcT5VJFU6f7gH07I2`; not the older product                                                                                                                                      |
+| Connected production frontend | **READY / PROMOTED**, `dpl_5StVSw6YN4zin3oY83XxWpXvpS89`, application commit `6a0f4ce`, Node 26                                                                                                                     |
+| Frontend API configuration    | Production-only server-side `TARGETJEE_API_BASE_URL=https://targetjee-studio-api.onrender.com`; configured **before** rebuilding, so CSP and runtime discovery agree                                                |
+| New Render service            | Owner screenshot: existing `targetjee-studio-api`, Free/Docker, manual `main` merge `0a8022f`, Live; health and all 12 reference certificates independently verified over HTTPS                                     |
+| Corrected backend source      | `416ddaa62a260e18126af60b96ff1237fa4f833d`, merged via [PR #4](https://github.com/soham-laha/Practice-project/pull/4) as `0a8022f` and deployed for PR #4; the later security/provider patch still needs deployment |
 
 The frontend deployment was created at merged commit `6a0f4ce` from the then-active Arena branch. It remains on that revision because PR #4 changed backend execution, tests and documentation, not the frontend application. The backend is now on merged `0a8022f`. Later verification/documentation commits do not imply a new host revision; Render's Blueprint deliberately disables source-push automatic deployment. No provider key was added to either host.
 
@@ -60,7 +66,7 @@ Main push run **[43821189854](https://github.com/soham-laha/Practice-project/act
 
 **Attempt 2 now PASSES without changing application source**, 07:10:25–07:12:40 UTC. It has no backend input: 13 reference-browser cases passed, 3 public-only cases and full smoke explicitly skipped. Main's Node 22/26 + Python 3.12 source-quality checks also pass. The separate **16-case run with both origins** above—not the reference-only rerun—is the API/validation/20 MiB acceptance evidence.
 
-The original audit used a 20-second request budget for both static pages and keyless API probes, shorter than Render Free's documented 50s+ cold-start warning. Current verification-only maintenance keeps page probes at 20 seconds but allows **120 seconds for keyless auth probes**, outlasting the proxy's bounded 110-second upstream wait. Six new unit cases verify both model budgets, zero provider credentials, explicit unconfigured-vs-unavailable handling, no retry/status weakening, target rejection before network and timeout propagation. This makes the audit cold-start-aware; it does not change application deadlines, mask failed checks or establish that a particular cold start was the cause of the earlier failure.
+The original audit used a 20-second request budget for both static pages and keyless API probes, shorter than Render Free's documented 50s+ cold-start warning. PR #5 verification-only maintenance keeps page probes at 20 seconds but allows **120 seconds for keyless auth probes**, outlasting the proxy's bounded 110-second upstream wait. Six new unit cases verify both model budgets, zero provider credentials, explicit unconfigured-vs-unavailable handling, no retry/status weakening, target rejection before network and timeout propagation. This makes the audit cold-start-aware; it does not change application deadlines, mask failed checks or establish that a particular cold start was the cause of the earlier failure.
 
 ## Deployed correction and remaining provider acceptance
 
@@ -68,7 +74,7 @@ Source `416ddaa`, now deployed within merge `0a8022f`, retains the disposable fa
 
 Provider calls have a **75-second total async deadline**, reserving verification time within the frontend's 110-second upstream deadline on a running service. Six backend regressions cover fixed budgets, actual worker resource-limit installation, minimal environment, fail-closed timeout/resource failures and cancellation of a mocked slow provider without key leakage. Host cold starts/contention may still cause safe failures; a free-tier or provider latency guarantee is not claimed.
 
-**Hosting follow-through is complete.** PR #4 is merged, the existing Render service is manually deployed and independently verified, and another frontend rebuild was unnecessary because its application code/origin/API contract did not change. The already-provided URL is correct. Current maintenance is limited to audit scripts/tests and documents; merging it requires no hosting deployment.
+**Hosting follow-through is complete.** PR #4 is merged, the existing Render service is manually deployed and independently verified, and another frontend rebuild was unnecessary because its application code/origin/API contract did not change. The already-provided URL is correct. PR #5 maintenance was limited to audit scripts/tests and documents and required no hosting deployment. The later application/security review linked at the top is different and does require deployment.
 
 The remaining full-product gate is an owner-authorized browser BYOK check: small non-sensitive text extraction and coaching, each supported model and supported file type, and removal of the local key afterward. Provider usage may incur charges. Never send the key in chat or put it in a workflow, deployment variable, URL, body, log or artifact. Do not claim successful OCR or a 20 MiB generated result from a synthetic malformed-key upload.
 
@@ -87,9 +93,9 @@ Earlier corrected-source evidence: **[43819106235](https://github.com/soham-laha
 
 This source/container evidence is now complemented by the passing public run against the deployed correction. Verification-script/documentation commits are tracked in [Quality & privacy gates](https://github.com/soham-laha/Practice-project/actions/workflows/quality.yml); a maintenance commit is not passed off as a new frontend/backend deployment.
 
-### Current maintenance and previous local application gates
+### PR #5 maintenance and previous local application gates (historical)
 
-Current local runtime: Node **22.22.3**, npm **10.9.8**. This post-deployment maintenance actually reruns `npm ci`, zero-warning ESLint, TypeScript, **68 frontend tests in 10 files**, Prettier, the design/source-secret audit and `git diff --check`. Its new transport fixtures never use a real provider key, never contact a public host and cannot append simulated results to the real CI summary.
+PR #5 local runtime was Node **22.22.3**, npm **10.9.8**. That post-deployment maintenance reran `npm ci`, zero-warning ESLint, TypeScript, **68 frontend tests in 10 files**, Prettier, the design/source-secret audit and `git diff --check`. Its new transport fixtures never use a real provider key, never contact a public host and cannot append simulated results to the real CI summary.
 
 The prior full local application run on corrected source `416ddaa` passed **66 backend tests with warnings as errors**, a fresh Next 16.4.6 webpack production build, Ruff lint/format, **13 production-mode browser cases / 3 public-only skips**, local two-service smoke, npm audit **0 vulnerabilities** and `pip check`. Those are historical local results, not relabelled as new runs in this maintenance or as public evidence. Its local Python was **3.11.2**, while the actual remote matrix/container exercises **3.12**. `pip check` verifies dependency consistency, not Python CVEs.
 

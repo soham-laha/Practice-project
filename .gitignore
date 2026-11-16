@@ -13,6 +13,10 @@ __pycache__/
 !.env.example
 .vercel/
 .arena/
+# Local design tooling; the reviewed lock/receipt restores it without vendoring
+# themes, screenshots or intentionally failing third-party lint fixtures.
+.agents/skills/
+.hallmark/
 .cache/
 playwright-report/
 test-results/

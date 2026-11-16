@@ -8,6 +8,11 @@ const root = process.cwd(),
     '.next',
     '.venv',
     '.cache',
+    // Installed development tools include deliberately bad design fixtures;
+    // product app/components/styles remain fully scanned below.
+    '.arena',
+    '.agents',
+    '.hallmark',
     '.ruff_cache',
     'artifacts',
     'test-results',
@@ -106,8 +111,13 @@ for (const [, name = 'light', body] of blocks) {
       `${name}: ${a}/${b} contrast ${ratio.toFixed(2)} is insufficient`,
     );
   }
+  for (const background of ['surface', 'surface-alt', 'bg'])
+    assert(
+      contrast(tokens['control-line'], tokens[background]) >= 3,
+      `${name}: form-control boundary fails 3:1 against ${background}`,
+    );
   console.log(
-    `✓ ${name}: ${pairs.length} semantic contrast pairs ${name === 'contrast' ? 'AAA' : 'AA'} compliant`,
+    `✓ ${name}: ${pairs.length} semantic text pairs ${name === 'contrast' ? 'AAA' : 'AA'} compliant; form boundaries ≥3:1`,
   );
 }
 const files = walk(root).filter(

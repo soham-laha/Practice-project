@@ -100,7 +100,7 @@ export function Providers({ children }: { children: ReactNode }) {
   const saveKey = (key: string) => {
     localStorage.setItem(KEYS.key, key.trim());
     setHasKey(true);
-    notify('Key saved on this device. You’re ready to forge.');
+    notify('Key saved on this device. Gemini access is checked when you use it.');
   };
   const removeKey = () => {
     localStorage.removeItem(KEYS.key);

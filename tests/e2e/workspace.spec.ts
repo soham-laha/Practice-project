@@ -219,6 +219,61 @@ test('Main NTA drill completes without diagnostic clutter and survives export/re
   await expect(page.getByText('6 of 6 answered correctly', { exact: true })).toBeVisible();
 });
 
+test('image forge keeps the source and saved key after a checked rejection or provider timeout', async ({
+  page,
+}) => {
+  const key = 'image_failure_fixture_not_a_real_key_123456';
+  await page.goto('/forge');
+  await page.locator('.key-pill').click();
+  await page.getByLabel('Gemini API key', { exact: false }).fill(key);
+  await page.getByRole('button', { name: 'Save key on this device' }).click();
+  await page.getByRole('tab', { name: 'Upload image', exact: true }).click();
+  await page.getByLabel('Upload PNG or JPEG problem').setInputFiles({
+    name: 'synthetic-problem.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+      'base64',
+    ),
+  });
+  await page.route('**/api/engine/upload-target', (route) =>
+    route.fulfill({ json: { url: '/api/engine/v1/extractions/upload' } }),
+  );
+  let calls = 0;
+  await page.route('**/api/engine/v1/extractions/upload', (route) => {
+    calls++;
+    expect(route.request().headers()['x-gemini-api-key']).toBe(key);
+    expect(route.request().postData()).not.toContain(key);
+    expect(route.request().postData()).toContain(
+      calls === 1 ? 'gemini-flash-lite-latest' : 'gemini-flash-latest',
+    );
+    return route.fulfill({
+      status: calls === 1 ? 422 : 504,
+      json: {
+        detail:
+          calls === 1
+            ? 'Gemini produced equivalent answer options. No unverified item was released.'
+            : 'Gemini exceeded the request time limit. No automatic retry was made.',
+      },
+    });
+  });
+  for (const [model, error] of [
+    ['gemini-flash-lite-latest', 'equivalent answer options'],
+    ['gemini-flash-latest', 'request time limit'],
+  ]) {
+    await page.getByLabel('Your Gemini model').selectOption(model);
+    await page.getByRole('button', { name: 'Forge my drill', exact: false }).click();
+    await expect(page.getByRole('alert').filter({ hasText: error })).toBeVisible();
+    await expect(page.getByText('synthetic-problem.png', { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Manage saved Gemini key', exact: true }),
+    ).toBeVisible();
+    expect(await page.evaluate(() => localStorage.getItem('targetjee.byok.gemini.v1'))).toBe(key);
+    expect(await page.evaluate(() => sessionStorage.getItem('targetjee.forged.v1'))).toBeNull();
+  }
+  expect(calls).toBe(2); // No silent retry, model switch, or unverified fallback drill.
+});
+
 test('grace extensions append events and do not interrupt answers', async ({ page }) => {
   await page.goto('/simulator?start=reference');
   await expect(page.locator('.answer-option').first()).toBeVisible();

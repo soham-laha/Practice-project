@@ -4,7 +4,9 @@
 
 Turn a textbook problem into a timed, four-option drill. Understand why a wrong answer looked right, find the first invalid pivot, test a counterfactual, and close the loop with a 45-second recovery check. Or start with the complete built-in reference experience—no account, API key or running AI service needed.
 
-> **Deployment status:** the new Vercel frontend and stateless Render API are deployed, connected and verified. Use the **Website** field in this repository’s **About** panel for the public site; the URL is intentionally not duplicated in this README. **Both six-item exam validation batches, all 16 public browser/integration cases and the two-service HTTP smoke pass** after the PR #4 backend deployment. Reference drills need no key; successful live Gemini extraction/coach remains untested and requires each learner’s browser-held key. PRs #1–#4 are merged into `main`. See [the repository investigation](docs/REPOSITORY_REVIEW.md), [exact verification evidence and provider limits](docs/AUDIT_REPORT.md) and [deployment operations](docs/DEPLOYMENT.md). The older TargetJEE product remains untouched.
+> **Review status:** the final repository audit found and patched upload-dependency, Gemini-contract/error, saved-key wording, local-reset and form-contrast issues. [Findings, fresh verification and open items](docs/FINAL_REVIEW.md) are recorded separately from the older deployed evidence. **These application fixes still need review/merge and deployment; successful real-key Gemini forging/coaching remains unverified.** Hallmark is installed globally and in this workspace; [its design audit and remaining polish work](docs/DESIGN_TOOLING.md) are documented, not represented as a completed redesign.
+>
+> **Deployed baseline:** the dedicated Vercel frontend and stateless Render API are connected. Use **About → Website** for the public site; its URL is intentionally not duplicated here. The earlier 16-case public run and both six-item validation batches passed on the older deployed revisions. PRs #1–#5 are merged; a green historical/keyless check does not clear the reported live-generation failures. The older TargetJEE product remains untouched.
 
 ## What’s included
 
@@ -70,6 +72,7 @@ npm run test:e2e              # production services must already be running
 npm run smoke                 # local HTTP health/routes/both modes/models
 npm audit --audit-level=low
 .venv/bin/pip check
+.venv/bin/python -m pip_audit -r backend/requirements-dev.txt --vulnerability-service pypi --progress-spinner off
 ```
 
 The Linux test browser and libraries come from `@sparticuz/chromium` via npm, avoiding an extra browser-CDN download. Tests use Playwright + axe across **375 / 768 / 1440 pixels × all three themes**, six routes, explicit enhanced-contrast scans in High Contrast, and real Main/Advanced drill/repair/BYOK/export/reset/import/isolation flows. `scripts/browser.mjs` configures the bundled libraries without disabling browser web security. Browser screenshots/reports are generated into ignored directories; they are not committed artifacts.
@@ -83,6 +86,8 @@ CI uses Python **3.12** and Node **22 / 26**. The health endpoint and local refe
 3. Select `gemini-flash-latest` (default) or `gemini-flash-lite-latest`.
 4. Your key is kept only at `localStorage['targetjee.byok.gemini.v1']`. It is forwarded in `X-Gemini-Api-Key` to FastAPI and then `x-goog-api-key` to Google, **not URLs or request bodies**.
 5. **Remove / Clear Key** deletes it immediately. Backups never include it.
+
+Saving a key checks its **format only**. “Key saved” does not mean Google accepted it, granted model access or confirmed quota; that is checked on use. No automatic paid validation/retry call is made on Save.
 
 The dashboard coach automatically sends the selected completed drill’s compact evidence summary when a saved key is available; follow-ups send recent conversation context. Source scans are sent only when you click Forge. The provider sees these requests and its quotas, terms and billing apply. A free-tier key is not a guarantee of unrestricted or perpetual free use. Never enter a server-wide Gemini key in environment variables. Device access and same-origin script access can expose localStorage: this is privacy through locality, **not encrypted secret storage**.
 
@@ -136,6 +141,8 @@ The owner has deployed the new **`targetjee-studio-api`** Render service from `m
 
 ## Documentation
 
+- [Final repository findings, tests and unresolved provider acceptance](docs/FINAL_REVIEW.md)
+- [Hallmark installation receipt, design audit and recommended polish](docs/DESIGN_TOOLING.md)
 - [Design research, citations, semantic tokens and explicit defaults](docs/DESIGN_RESEARCH.md)
 - [Architecture, security, equations and PDF traceability](docs/SYSTEM_ARCHITECTURE.md)
 - [Verification results and deployment status](docs/AUDIT_REPORT.md)

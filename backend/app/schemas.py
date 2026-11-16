@@ -88,6 +88,12 @@ class Item(StrictModel):
         return self
 
 
+class ExtractionResult(StrictModel):
+    # Also sent to Gemini as a response schema. Pydantic and the isolated
+    # algebra worker still validate independently; structured JSON is no proof.
+    items: list[Item] = Field(min_length=1, max_length=5)
+
+
 class ExtractionRequest(StrictModel):
     text: str = Field(min_length=10, max_length=30000)
     exam: Exam = "main"

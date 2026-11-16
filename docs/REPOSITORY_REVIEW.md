@@ -1,5 +1,7 @@
 # Repository review — 16 November 2026
 
+**Latest review:** [FINAL_REVIEW.md](FINAL_REVIEW.md) supersedes the historical maintenance-only status below. It records confirmed dependency/application fixes, fresh tests, unresolved real Gemini failures and the [Hallmark installation/design audit](DESIGN_TOOLING.md). The new patch is not deployed and will need both existing services updated after merge.
+
 This follow-up reviews the merged implementation on a new Arena working branch. It does not rewrite `main`, remove contribution history, change the app's license, or reuse the older TargetJEE deployment.
 
 ## Failed GitHub Actions investigation
@@ -42,4 +44,4 @@ Only the dedicated `targetjee-studio` Vercel project and the new owner-provision
 
 The live-host check exposed an 8-second symbolic wall-deadline timeout on six-item reference batches. [PR #4](https://github.com/soham-laha/Practice-project/pull/4), merged as `0a8022f`, raises only the wall allowance to 30 seconds, retains 6-second CPU / 512 MiB worker caps and minimal environments, and reserves a 75-second total provider deadline within the 110-second proxy deadline. The owner manually deployed that merge to the **existing** Render service. [Public run 43821911026](https://github.com/soham-laha/Practice-project/actions/runs/43821911026) now **PASSES all 16 cases**, including both complete six-item certificate batches, plus real-host HTTP smoke. Assertions were not weakened or batches reduced. The pre-deployment red main check also passes on rerun without an application change.
 
-No hosting action remains for this correction, and no authorized real Gemini key has been used. Current maintenance only refreshes evidence and makes the audit's keyless-request timeout accommodate free-host cold starts; it does not change the deployed frontend/backend. See [the audit](AUDIT_REPORT.md) for exact identities and [the operator guide](DEPLOYMENT.md) for future updates and the separate live-provider acceptance checklist. Provider-free transport/auth tests are not represented as successful AI extraction or coaching.
+No hosting action remains for this correction, and no authorized real Gemini key has been used. PR #5 maintenance only refreshed evidence and makes the audit's keyless-request timeout accommodate free-host cold starts; it does not change the deployed frontend/backend. See [the audit](AUDIT_REPORT.md) for exact identities and [the operator guide](DEPLOYMENT.md) for future updates and the separate live-provider acceptance checklist. Provider-free transport/auth tests are not represented as successful AI extraction or coaching.
