@@ -1,0 +1,111 @@
+import json
+from pathlib import Path
+
+import httpx
+import pytest
+from fastapi.testclient import TestClient
+
+from backend.app import gemini
+from backend.app.main import app
+
+client = TestClient(app)
+KEY = "transport_fixture_not_a_real_key_123456"
+MODELS = ["gemini-flash-latest", "gemini-flash-lite-latest"]
+
+
+def mock_provider(monkeypatch, handler):
+    original = httpx.AsyncClient
+    monkeypatch.setattr(
+        gemini.httpx,
+        "AsyncClient",
+        lambda **kwargs: original(transport=httpx.MockTransport(handler), **kwargs),
+    )
+
+
+def provider_body(text):
+    return {"candidates": [{"content": {"parts": [{"text": text}]}}]}
+
+
+@pytest.mark.parametrize("model", MODELS)
+def test_request_scoped_header_only_provider_transport(monkeypatch, model, caplog):
+    item = json.loads(Path("data/seed-items.json").read_text())[0]
+
+    def handler(request):
+        assert request.headers["x-goog-api-key"] == KEY
+        assert KEY not in str(request.url)
+        assert KEY not in request.content.decode()
+        assert request.url.path.endswith(f"/{model}:generateContent")
+        return httpx.Response(200, json=provider_body(json.dumps({"items": [item]})))
+
+    mock_provider(monkeypatch, handler)
+    response = client.post(
+        "/v1/extractions",
+        headers={"X-Gemini-Api-Key": KEY},
+        json={
+            "text": "A complete real textbook problem for validation.",
+            "exam": "main",
+            "model": model,
+        },
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["items"][0]["parameter_source"] == "model-proposed"
+    assert KEY not in response.text
+    assert KEY not in caplog.text
+
+
+@pytest.mark.parametrize("output", ["[]", "null", '{"items": []}', "not JSON"])
+def test_invalid_provider_root_fails_closed(monkeypatch, output):
+    mock_provider(monkeypatch, lambda _: httpx.Response(200, json=provider_body(output)))
+    response = client.post(
+        "/v1/extractions",
+        headers={"X-Gemini-Api-Key": KEY},
+        json={"text": "A complete textbook problem is supplied here.", "exam": "main"},
+    )
+    assert response.status_code == 422
+    assert KEY not in response.text
+
+
+def test_duplicate_provider_item_ids_rejected(monkeypatch):
+    item = json.loads(Path("data/seed-items.json").read_text())[0]
+    output = json.dumps({"items": [item, item]})
+    mock_provider(monkeypatch, lambda _: httpx.Response(200, json=provider_body(output)))
+    response = client.post(
+        "/v1/extractions",
+        headers={"X-Gemini-Api-Key": KEY},
+        json={"text": "A complete textbook problem is supplied here.", "exam": "main"},
+    )
+    assert response.status_code == 422
+
+
+@pytest.mark.parametrize("status,expected", [(400, 502), (401, 401), (429, 429), (500, 502)])
+def test_provider_error_body_never_forwarded(monkeypatch, status, expected):
+    mock_provider(monkeypatch, lambda _: httpx.Response(status, json={"error": {"message": KEY}}))
+    response = client.post(
+        "/v1/coach",
+        headers={"X-Gemini-Api-Key": KEY},
+        json={
+            "message": "Suggest a short focused drill.",
+            "context": "Domain errors",
+            "exam": "main",
+        },
+    )
+    assert response.status_code == expected
+    assert KEY not in response.text
+
+
+def test_provider_network_error_sanitized(monkeypatch):
+    def handler(request):
+        raise httpx.RemoteProtocolError(KEY, request=request)
+
+    mock_provider(monkeypatch, handler)
+    response = client.post(
+        "/v1/coach",
+        headers={"X-Gemini-Api-Key": KEY},
+        json={
+            "message": "Suggest a short focused drill.",
+            "context": "Domain errors",
+            "exam": "main",
+        },
+    )
+    assert response.status_code == 503
+    assert KEY not in response.text
