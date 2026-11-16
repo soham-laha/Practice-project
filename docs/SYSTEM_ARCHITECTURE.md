@@ -89,7 +89,7 @@ Request streams are bounded (21 MB including multipart overhead); actual files a
 - `backend/Dockerfile`: Python 3.12, non-root runtime, port from host, no access logs. Build from repository root so `data/` is included.
 - `render.yaml` and `backend/railway.toml`: deployment manifests. Set exact HTTPS frontend origin and require HTTPS at a trusted terminating proxy. Railway is usage-metered; Render availability/cold starts depend on the current plan. Neither is promised unconditionally zero-cost.
 - Vercel: framework Next.js; `npm ci` / `npm run build`; Node 22.12 or newer; server-only `TARGETJEE_API_BASE_URL=https://<your-new-api-host>`.
-- The latest user instruction authorizes publishing to `soham-laha/Practice-project` on `arena/051ee326-practice-project`, with a pull request for `main`. Never reuse the older `TargetJEE` repository or `targetjee-engine` Vercel project for this build. The active Arena branch is fixed; this session cannot replace history or push directly to `main`.
+- The latest user instruction authorizes publishing to `soham-laha/Practice-project` on the current Arena session branch, with a pull request for `main`. Never reuse the older `TargetJEE` repository or `targetjee-engine` Vercel project for this build. The active Arena branch is fixed; this session cannot replace history or push directly to `main`.
 - Actual remote creation/deployment results and missing permissions belong in `docs/AUDIT_REPORT.md`, not fabricated live links.
 
 ## Verification and PDF traceability

@@ -4,7 +4,7 @@
 
 Turn a textbook problem into a timed, four-option drill. Understand why a wrong answer looked right, find the first invalid pivot, test a counterfactual, and close the loop with a 45-second recovery check. Or start with the complete built-in reference experience—no account, API key or running AI service needed.
 
-> **Status:** the user has authorized publishing this implementation to **[soham-laha/Practice-project](https://github.com/soham-laha/Practice-project)** on the fixed branch `arena/051ee326-practice-project`. Select that branch to browse the implementation; changes reach the default `main` branch through a pull request. See [the audit report](docs/AUDIT_REPORT.md) for local test results and remaining deployment blockers. Source publication is not a public application deployment. The older TargetJEE product remains untouched.
+> **Status:** the implementation is published in **[soham-laha/Practice-project](https://github.com/soham-laha/Practice-project)** and PR #1 was merged into `main`. Follow-up fixes use the current Arena working branch and a new pull request, without rewriting history. See [the repository investigation](docs/REPOSITORY_REVIEW.md) for the failed CI startup probe, attribution and license review, and [the audit report](docs/AUDIT_REPORT.md) for verification/deployment evidence. Source publication is not a public application deployment. The older TargetJEE product remains untouched.
 
 ## What’s included
 
@@ -23,7 +23,7 @@ Turn a textbook problem into a timed, four-option drill. Understand why a wrong 
 
 ## Run locally
 
-Prerequisites: Node **22.12+**, npm and Python **3.12** (the Docker/CI target). The current sandbox tests ran under Python 3.11.2 because standalone 3.12 downloads were blocked; 3.12 execution is explicitly not yet verified. No Gemini key is needed for the reference simulator/review/cards.
+Prerequisites: Node **22.12+**, npm and Python **3.12** (the Docker/CI target). The sandbox uses Python 3.11.2 because standalone 3.12 downloads were blocked. GitHub has successfully run the installation, static/build and unit-contract gates with Python 3.12; the original workflow then failed on a HEAD-versus-GET readiness mismatch, not those test gates. The corrected workflow tests Node 22 and 26 with Python 3.12. No Gemini key is needed for the reference simulator/review/cards.
 
 ```bash
 npm ci
@@ -101,7 +101,7 @@ Uploads are signature-checked and decoded, not trusted solely by extension: imag
 
 ## Deploy without touching an older product
 
-The latest user instruction explicitly authorizes committing and pushing this implementation to `soham-laha/Practice-project`, superseding the earlier new-repository-only publication requirement for this repository. Commits and pushes must remain on `arena/051ee326-practice-project`; use a pull request to integrate into `main`, without rewriting history. Do **not** overwrite `soham-laha/TargetJEE` or the older `targetjee-engine` Vercel project. Application deployments should still use the separate new project/services described below.
+The latest user instruction explicitly authorizes committing and pushing this implementation to `soham-laha/Practice-project`, superseding the earlier new-repository-only publication requirement for this repository. Commits and pushes must remain on the current Arena session branch; use a pull request to integrate into `main`, without rewriting history. Do **not** overwrite `soham-laha/TargetJEE` or the older `targetjee-engine` Vercel project. Application deployments should still use the separate new project/services described below.
 
 ### Backend (Render or Railway)
 
@@ -137,9 +137,11 @@ The latest user instruction explicitly authorizes committing and pushing this im
 - [Design research, citations, semantic tokens and explicit defaults](docs/DESIGN_RESEARCH.md)
 - [Architecture, security, equations and PDF traceability](docs/SYSTEM_ARCHITECTURE.md)
 - [Verification results and deployment status](docs/AUDIT_REPORT.md)
+- [CI failure, contribution attribution, licensing and branch investigation](docs/REPOSITORY_REVIEW.md)
+- [Third-party license scope and preserved upstream notices](THIRD_PARTY_NOTICES.md)
 
 The four custom-design fields in the request were unfilled placeholders. Documented defaults implement an intentional coherent design; they are **not represented as unspecified exact user-provided artwork**.
 
 ## License
 
-MIT. Bundled fonts retain their SIL Open Font License via Fontsource; KaTeX, Lucide, Three.js and other dependencies retain their respective licenses. Textbook uploads remain subject to their owners’ rights; upload only material you are permitted to process.
+The existing application license is MIT; this is a permission notice, not a registration or proof of ownership. The owner has not requested a replacement policy. Dependencies are **not all MIT**: bundled fonts retain OFL terms, and optional native components have additional licenses. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and the preserved notices in `public/notices/`. Textbook uploads remain subject to their owners’ rights; upload only material you are permitted to process.

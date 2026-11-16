@@ -1,0 +1,3 @@
+# Upstream legal notices are byte-for-byte copies, including original CRLF and
+# trailing spacing. Do not normalize them or apply source whitespace linting.
+public/notices/*.txt -text -whitespace
