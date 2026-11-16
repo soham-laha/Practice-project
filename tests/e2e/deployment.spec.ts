@@ -7,7 +7,7 @@ test.describe('public two-service integration without provider spend', () => {
   test.skip(!process.env.SMOKE_BACKEND_URL, 'A real public backend origin is required.');
 
   test('health and both exam certificate sets on the real backend', async ({ request }) => {
-    test.setTimeout(180000); // Render Free can take 50+ seconds to wake up.
+    test.setTimeout(240000); // Cold-start health plus two bounded validation batches.
     const frontend = publicOrigin(process.env.SMOKE_FRONTEND_URL);
     const backend = publicOrigin(process.env.SMOKE_BACKEND_URL);
     const health = await request.get(`${backend}/health`, {
@@ -34,7 +34,7 @@ test.describe('public two-service integration without provider spend', () => {
         data: { items },
         headers: { Origin: frontend },
         maxRedirects: 0,
-        timeout: 30000,
+        timeout: 45000, // Backend wall bound is 30s; retain room for the network.
       });
       // Only public bundled reference data is involved here, never a key or
       // a learner's source. Keep the safe rejection visible in GitHub Checks.

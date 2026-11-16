@@ -40,6 +40,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Validate public targets
+        id: targets
         run: |
           node --input-type=module <<'JS'
           import { publicOrigin } from './scripts/check-hosted.mjs';
@@ -53,7 +54,9 @@ jobs:
           TEST_BASE_URL: ${{ env.SMOKE_FRONTEND_URL }}
         run: npm run test:e2e
       - name: Full two-service smoke only when a real backend is supplied
-        if: inputs.backend_url != ''
+        # Keep independent HTTP evidence even when a browser/validation case
+        # fails, but never contact a target rejected by the origin guard.
+        if: ${{ !cancelled() && steps.targets.outcome == 'success' && inputs.backend_url != '' }}
         run: npm run smoke
       - name: Explain incomplete production scope
         if: inputs.backend_url == ''
