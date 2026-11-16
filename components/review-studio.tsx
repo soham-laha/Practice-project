@@ -61,12 +61,7 @@ export function ReviewStudio({ session, sample = false }: { session: Session; sa
     <section className="review-section" id="review">
       <div className="review-header">
         <div>
-          <span className="eyebrow" style={{ color: 'var(--muted)', fontSize: 7, marginBottom: 7 }}>
-            THE EVIDENCE-LED REPAIR LOOP
-          </span>
-          <h2>
-            Let’s make the mistake <em>useful.</em>
-          </h2>
+          <h2>Let’s make the mistake useful.</h2>
           <p>
             {analysis.missed.length
               ? `${analysis.missed.length} question${analysis.missed.length > 1 ? 's' : ''} to revisit. Highest mark swing first.`
@@ -103,9 +98,6 @@ export function ReviewStudio({ session, sample = false }: { session: Session; sa
           <article className="review-item glass card" key={item.id}>
             <div className="review-item-head">
               <div>
-                <span className="eyebrow">
-                  {item.subject.toUpperCase()} · {item.topic.toUpperCase()}
-                </span>
                 <h3>
                   {correct
                     ? 'The reasoning held.'
@@ -113,6 +105,9 @@ export function ReviewStudio({ session, sample = false }: { session: Session; sa
                       ? 'A question left open.'
                       : trap?.label}
                 </h3>
+                <p className="context-label">
+                  {item.subject}: {item.topic}
+                </p>
               </div>
               <span className={`pill ${correct ? 'accent' : 'warning'}`}>
                 {correct ? <Check size={12} /> : <ArrowRight size={12} />}{' '}
@@ -135,7 +130,7 @@ export function ReviewStudio({ session, sample = false }: { session: Session; sa
               </div>
               <div>
                 <Clock3 size={12} />
-                {Math.round(a.elapsed)}s {a.grace > 0 && `· ${a.grace / 60} min grace`}
+                {Math.round(a.elapsed)}s {a.grace > 0 && `(including ${a.grace / 60} min grace)`}
                 {a.marked && <Flag size={11} />}
               </div>
             </div>
@@ -241,17 +236,17 @@ export function ReviewStudio({ session, sample = false }: { session: Session; sa
                   of at least 20 seconds before changing; it does not prove new evidence. Late means
                   the final 15% of the response window.
                 </p>
-                <h4>Option model · illustrative, not a diagnosis</h4>
+                <h4>Option model, illustrative, not a diagnosis</h4>
                 <div className="mode-detail">
                   {item.options.map((o, i) => (
                     <span className="pill" key={o.id}>
-                      {'ABCD'[i]}: {(probs[i] * 100).toFixed(1)}% · slope {o.slope.toFixed(2)}
+                      {'ABCD'[i]}: {(probs[i] * 100).toFixed(1)}%, slope {o.slope.toFixed(2)}
                     </span>
                   ))}
                 </div>
                 <p>
                   NRM attractiveness estimates describe this supplied parameter set, not a validated
-                  probability about you. The selected trap trace—not a model label—drives the
+                  probability about you. The selected trap trace, not a model label, drives the
                   repair.
                 </p>
               </div>

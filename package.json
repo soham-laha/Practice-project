@@ -16,11 +16,13 @@
     "audit:design": "node scripts/audit-design.mjs",
     "verify": "npm run lint && npm run typecheck && npm run build && npm test && npm run audit:design",
     "format": "prettier --write .",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "notices:update": "node scripts/update-notices.mjs"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.2.0",
     "@fontsource-variable/newsreader": "^5.2.0",
+    "@mlc-ai/web-llm": "0.2.88",
     "idb": "^8.0.3",
     "katex": "^0.19.1",
     "lucide-react": "^0.468.0",

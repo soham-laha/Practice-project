@@ -60,17 +60,27 @@ def assert_header_only(request):
     assert KEY not in request.content.decode()
 
 
-def assert_schema(request):
+def assert_schema(request, exam):
     config = json.loads(request.content)["generationConfig"]
     assert config["responseMimeType"] == "application/json"
     schema = config["responseJsonSchema"]
     assert schema["additionalProperties"] is False
     assert schema["required"] == ["items"]
     items = schema["properties"]["items"]
-    assert (items["minItems"], items["maxItems"]) == (1, 5)
+    assert (items["minItems"], items["maxItems"]) == (1, 1)
     item = schema["$defs"][items["items"]["$ref"].split("/")[-1]]
-    assert item["properties"]["options"]["minItems"] == 4
-    assert item["properties"]["options"]["maxItems"] == 4
+    fields = item["properties"]
+    assert fields["options"]["minItems"] == 4
+    assert fields["options"]["maxItems"] == 4
+    assert fields["exam"]["enum"] == [exam]
+    assert fields["correct_id"]["enum"] == list("ABCD")
+    assert fields["negative_marks"]["enum"] == ([1] if exam == "main" else [1, 2])
+    assert (fields["beta_seconds"]["minimum"], fields["beta_seconds"]["maximum"]) == (
+        (90, 180) if exam == "main" else (180, 300)
+    )
+    assert fields["schema_version"]["enum"] == ["targetjee.item.v2"]
+    assert fields["positive_marks"]["enum"] == [4]
+    assert schema["$defs"]["Option"]["properties"]["id"]["enum"] == list("ABCD")
     assert item["additionalProperties"] is False
 
     # All local references must resolve at the response root, not an embedded
@@ -109,7 +119,7 @@ def test_both_models_and_exams_request_constrained_json_and_check_real_algebra(
     assert response.json()["items"][0]["exam"] == exam
     assert len(calls) == 1
     assert_header_only(calls[0])
-    assert_schema(calls[0])
+    assert_schema(calls[0], exam)
 
 
 @pytest.mark.parametrize("model", MODELS)
@@ -137,7 +147,7 @@ def test_real_file_decoding_and_exact_inline_bytes_with_mock_provider(
     assert response.json()["verification"][0]["valid"]
     assert len(calls) == 1
     assert_header_only(calls[0])
-    assert_schema(calls[0])
+    assert_schema(calls[0], exam)
     inline = json.loads(calls[0].content)["contents"][0]["parts"][1]["inlineData"]
     assert inline["mimeType"] == mime
     assert base64.b64decode(inline["data"]) == data
@@ -310,3 +320,83 @@ def test_unrecognized_worker_error_is_not_echoed_and_deadline_is_not_blame_on_so
     assert response.status_code == 503
     assert "algebra check reached its time limit" in response.json()["detail"]
     assert "items" not in response.json()
+
+
+@pytest.mark.parametrize("field", ["label", "description"])
+def test_empty_diagram_metadata_is_rejected_before_success_reaches_browser(monkeypatch, field):
+    item = seed()
+    anchor = {"label": "Block", "description": "The supported block.", "x": 0.5, "y": 0.5}
+    anchor[field] = ""
+    item["diagram_anchors"] = [anchor]
+    calls = provider(monkeypatch, envelope(item))
+    response = client.post(
+        "/v1/extractions",
+        headers={"X-Gemini-Api-Key": KEY},
+        json={"text": "A complete synthetic problem for a mocked provider."},
+    )
+    assert response.status_code == 422
+    assert response.json()["diagnostic"]["code"] == "item_contract"
+    assert "items" not in response.json()
+    assert KEY not in response.text
+    assert len(calls) == 1
+
+
+def test_coach_still_uses_unstructured_single_call_and_its_existing_budget(monkeypatch):
+    calls = provider(
+        monkeypatch,
+        {"candidates": [{"content": {"parts": [{"text": "Check the acceleration sign."}]}}]},
+    )
+    response = client.post(
+        "/v1/coach",
+        headers={"X-Gemini-Api-Key": KEY},
+        json={"message": "Suggest one guardrail.", "context": ""},
+    )
+    assert response.status_code == 200
+    assert len(calls) == 1
+    config = json.loads(calls[0].content)["generationConfig"]
+    assert config == {"temperature": 0.2, "maxOutputTokens": 1800}
+    assert_header_only(calls[0])
+
+
+@pytest.mark.parametrize(
+    "path,value",
+    [
+        (("schema_version",), "targetjee.item.v1"),
+        (("correct_id",), "1"),
+        (("options", 1, "id"), "A"),
+        (("negative_marks",), 2),
+        (("beta_seconds",), 181),
+        (("a",), 0),
+        (("c",), 1),
+        (("solution",), "X"),
+        (("domain",), dict.fromkeys("abcdefghi", "real")),
+        (("options", 0, "trap", "recovery_check", "expression"), "x" * 301),
+    ],
+)
+def test_provider_projection_does_not_relax_final_contract_or_trigger_repairs(
+    monkeypatch, path, value
+):
+    from backend.app import main
+
+    item = seed()
+    parent = item
+    for part in path[:-1]:
+        parent = parent[part]
+    parent[path[-1]] = value
+    calls = provider(monkeypatch, envelope(item))
+
+    def must_not_verify(_items):
+        raise AssertionError("An invalid item reached symbolic verification")
+
+    monkeypatch.setattr(main, "verify_bounded", must_not_verify)
+    response = client.post(
+        "/v1/extractions",
+        headers={"X-Gemini-Api-Key": KEY},
+        json={"text": "A complete synthetic problem for a mocked provider."},
+    )
+    assert response.status_code == 422
+    assert response.json()["diagnostic"]["code"] == "item_contract"
+    assert response.json()["diagnostic"]["stage"] == "format"
+    assert "items" not in response.json()
+    assert KEY not in response.text
+    assert len(calls) == 1

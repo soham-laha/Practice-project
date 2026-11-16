@@ -27,19 +27,13 @@ export function TrapPreview() {
       aria-labelledby="trap-title"
     >
       <div className="card-topline">
-        <span className="eyebrow">
-          <span className="plum-dot" />A QUICK MIND CHECK
-        </span>
+        <span className="preview-caption">Try a reference problem</span>
         <span className="time-chip">
           <Timer size={13} />
           {seconds}s
         </span>
       </div>
-      <h3 id="trap-title">
-        Looks familiar.
-        <br />
-        <em>Look a little closer.</em>
-      </h3>
+      <h3 id="trap-title">The sign is the question.</h3>
       <p className="trap-question">
         If <MathExpr value="x=-3" />, then <MathExpr value="\sqrt{x^2} = \;?" />
       </p>

@@ -1,3 +1,4 @@
+import { removeLocalModelCache } from './local-assistant-cache';
 import { openDB } from 'idb';
 import { EMPTY_LEARNER, learnerSchema, type Learner, type Session, scoreSession } from './types';
 import { nextPacingTier } from './psychometrics';
@@ -112,6 +113,7 @@ export async function importLearner(file: File): Promise<Learner> {
   return parsed.data;
 }
 export async function resetLocalData() {
+  await removeLocalModelCache();
   // Never report a complete reset while canonical history can reappear on
   // reload. If IndexedDB is blocked/fails, the caller keeps the error visible
   // and the learner can export or clear site storage through the browser.

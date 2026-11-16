@@ -294,3 +294,46 @@ test('grace extensions append events and do not interrupt answers', async ({ pag
   await page.locator('.answer-option').first().click();
   await expect(page.locator('.answer-option[aria-pressed=true]')).toHaveCount(1);
 });
+
+test('the decorative orbit fits its CSS slot without covering its caption', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/');
+  const webgl = await page.evaluate(() => {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl2');
+    gl?.getExtension('WEBGL_lose_context')?.loseContext();
+    return !!gl;
+  });
+  test.skip(!webgl, 'This browser has no WebGL2; the optional decorative scene is unavailable.');
+  const figure = page.locator('.notebook-orbit');
+  await figure.scrollIntoViewIfNeeded();
+  await expect(figure.locator('canvas')).toBeVisible();
+  const layout = await figure.evaluate((el) => {
+    const canvas = el.querySelector('canvas')!;
+    const rect = canvas.getBoundingClientRect();
+    const slot = el.querySelector('.orbit-scene')!.getBoundingClientRect();
+    const caption = el.querySelector('figcaption')!.getBoundingClientRect();
+    return {
+      width: rect.width,
+      height: rect.height,
+      slotWidth: slot.width,
+      slotHeight: slot.height,
+      canvasBottom: rect.bottom,
+      captionTop: caption.top,
+      bufferWidth: canvas.width,
+    };
+  });
+  expect(layout.width).toBe(160);
+  expect(layout.height).toBe(160);
+  expect(layout.width).toBe(layout.slotWidth);
+  expect(layout.height).toBe(layout.slotHeight);
+  expect(layout.canvasBottom).toBeLessThanOrEqual(layout.captionTop);
+  expect(layout.bufferWidth).toBeGreaterThanOrEqual(260);
+  await expect(figure.locator('.orbit-scene')).toHaveAttribute('aria-hidden', 'true');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect(figure.locator('.orbit-scene')).toBeHidden();
+  await expect(figure.locator('figcaption')).toBeVisible();
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.getByRole('button', { name: 'High contrast mode', exact: true }).click();
+  await expect(figure.locator('.orbit-scene')).toBeHidden();
+});

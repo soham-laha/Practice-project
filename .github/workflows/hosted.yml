@@ -39,6 +39,16 @@ jobs:
           node-version: '26'
           cache: npm
       - run: npm ci
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Install local generator-fixture dependencies
+        # The successful Forge UI regressions mock only Google's transport.
+        # Build their responses with the real local Pydantic/SymPy pipeline,
+        # never a real provider key or an unauthenticated public-generation call.
+        run: python -m pip install -r backend/requirements.txt
       - name: Validate public targets
         id: targets
         run: |

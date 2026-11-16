@@ -1,5 +1,69 @@
 import { KEYS } from './storage';
 
+const diagnosticCodes = new Set([
+  'provider_timeout',
+  'provider_network',
+  'provider_access',
+  'provider_quota',
+  'provider_model',
+  'provider_request',
+  'provider_unavailable',
+  'provider_blocked',
+  'provider_output_limit',
+  'provider_stopped',
+  'provider_empty',
+  'item_contract',
+  'verification_timeout',
+  'verification_rejected',
+]);
+export type Diagnostic = { code: string; stage: string; request_id: string; revision: string };
+export class ApiError extends Error {
+  diagnostic?: Diagnostic;
+  constructor(
+    message: string,
+    readonly status: number,
+    raw?: unknown,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+    if (!raw || typeof raw !== 'object') return;
+    const value = raw as Record<string, unknown>;
+    if (
+      typeof value.code === 'string' &&
+      diagnosticCodes.has(value.code) &&
+      typeof value.stage === 'string' &&
+      ['provider', 'format', 'verification'].includes(value.stage) &&
+      typeof value.request_id === 'string' &&
+      /^[a-f0-9]{12}$/.test(value.request_id) &&
+      typeof value.revision === 'string' &&
+      /^(?:[a-f0-9]{8}|workspace)$/.test(value.revision)
+    )
+      this.diagnostic = {
+        code: value.code,
+        stage: value.stage,
+        request_id: value.request_id,
+        revision: value.revision,
+      };
+  }
+}
+
+export function diagnosticReceipt(error: ApiError, model: string) {
+  // Only fixed/allowlisted metadata. Never include a key, exception message,
+  // source text, filename, history or provider response in a support receipt.
+  const selected = ['gemini-flash-latest', 'gemini-flash-lite-latest'].includes(model)
+    ? model
+    : 'unknown';
+  return [
+    `TargetJEE interface: ${process.env.NEXT_PUBLIC_APP_REVISION || 'workspace'}`,
+    `Model: ${selected}`,
+    `HTTP: ${error.status}`,
+    `Stage: ${error.diagnostic?.stage || 'not reported'}`,
+    `Code: ${error.diagnostic?.code || 'not reported (check deployed revisions)'}`,
+    `Request: ${error.diagnostic?.request_id || 'not reported'}`,
+    `API revision: ${error.diagnostic?.revision || 'not reported'}`,
+  ].join('\n');
+}
+
 async function transport(url: string, options: RequestInit) {
   let timedOut: boolean;
   try {
@@ -91,10 +155,30 @@ export async function apiRequest(path: string, body: object | FormData) {
   });
   const result = await readResponse(response);
   if (!response.ok)
-    throw new Error(
+    throw new ApiError(
       typeof result.detail === 'string'
         ? result.detail
         : 'The request could not be completed. Check your source and try again.',
+      response.status,
+      result.diagnostic,
     );
   return result;
+}
+
+export async function checkEngine() {
+  // Deliberately keyless. This tests our API, not Gemini, model access or quota.
+  const response = await transport('/api/engine/health', {
+    cache: 'no-store',
+    credentials: 'omit',
+    redirect: 'error',
+    signal: AbortSignal.timeout(20000),
+  });
+  const result = await readResponse(response);
+  if (!response.ok || result.status !== 'ok' || result.schema !== 'targetjee.item.v2')
+    throw new Error(
+      'The API is unavailable, warming up or on an incompatible build. This is not a Gemini quota check.',
+    );
+  return typeof result.revision === 'string' && /^(?:[a-f0-9]{8}|workspace)$/.test(result.revision)
+    ? result.revision
+    : 'not reported (older API build)';
 }

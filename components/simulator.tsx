@@ -259,10 +259,7 @@ export function Simulator() {
       <>
         <div className="page-title split-heading">
           <div>
-            <span className="eyebrow">CALM FOCUS. EXAM-READY THINKING.</span>
-            <h1>
-              Meet your next <em>breakthrough.</em>
-            </h1>
+            <h1>Practice room.</h1>
             <p>
               A focused, six-question reference drill. Same familiar CBT flow, with room to find
               your feet.
@@ -272,15 +269,7 @@ export function Simulator() {
         </div>
         <div className="setup-grid">
           <section className="setup-card card">
-            <span className="card-kicker">
-              <ScanLine size={15} />
-              SEEDED REFERENCE DRILL
-            </span>
-            <h2>
-              Good practice starts
-              <br />
-              with a little intention.
-            </h2>
+            <h2>Reference drill</h2>
             <p>
               {exam === 'main'
                 ? 'Single-concept traps that sharpen precision, from domains and signs to reference frames.'
@@ -289,13 +278,13 @@ export function Simulator() {
             </p>
             <div className="mode-detail">
               <span className="pill accent">JEE {exam === 'main' ? 'Main' : 'Advanced'}</span>
-              <span className="pill">6 questions · all subjects</span>
+              <span className="pill">6 questions, all subjects</span>
               <span className="pill">+4 / −{exam === 'main' ? '1' : '2'} marking</span>
             </div>
             <span className="field-label">Choose your practice style</span>
-            <div className="mode-cards">
+            <div className="mode-choices">
               <button
-                className={`mode-card ${!diagnostic ? 'selected' : ''}`}
+                className={`mode-choice ${!diagnostic ? 'selected' : ''}`}
                 aria-pressed={!diagnostic}
                 onClick={() => setDiagnostic(false)}
               >
@@ -305,7 +294,7 @@ export function Simulator() {
                 <p>Just the problem and the clock. Insights wait until you finish.</p>
               </button>
               <button
-                className={`mode-card ${diagnostic ? 'selected' : ''}`}
+                className={`mode-choice ${diagnostic ? 'selected' : ''}`}
                 aria-pressed={diagnostic}
                 onClick={() => setDiagnostic(true)}
               >
@@ -328,11 +317,10 @@ export function Simulator() {
             </p>
           </section>
           <aside className="pacing-panel">
-            <span className="eyebrow">YOUR PACE. NOT SOMEONE ELSE’S.</span>
             <h3>Confidence before the clock.</h3>
             <p>
-              Three steady, timely drills with at least 70% of available marks unlock the next
-              stage. No grace extensions required.
+              Three steady, timely drills with at least 70% of available marks open the next stage.
+              No grace extensions required.
             </p>
             <ol className="pacing-list">
               {PACING.map((stage, i) => (
@@ -380,7 +368,7 @@ export function Simulator() {
         </div>
         <div className="sim-header-actions">
           <span className="pill">
-            {stage.name} · {stage.factor.toFixed(2)}×
+            {stage.name}, {stage.factor.toFixed(2)}×
           </span>
           <div
             className={`sim-timer ${remaining <= 0 ? 'is-over' : ''}`}
@@ -423,10 +411,9 @@ export function Simulator() {
       <div className="simulation-grid">
         <section className="question-card card">
           <div className="question-meta">
-            <span className="card-kicker">
-              QUESTION {String(index + 1).padStart(2, '0')} /{' '}
-              {String(session.items.length).padStart(2, '0')} <span>·</span>{' '}
-              {item.subject.toUpperCase()}
+            <span className="section-label">
+              Question {String(index + 1).padStart(2, '0')} /{' '}
+              {String(session.items.length).padStart(2, '0')} <span>,</span> {item.subject}
             </span>
             <span className="marking">
               <strong>+4</strong> / −{item.negative_marks}
@@ -565,8 +552,8 @@ export function Simulator() {
         <ShieldCheck size={14} />
         <p>
           {session.diagnostic
-            ? 'Diagnostic practice · certainty tags are optional.'
-            : 'NTA simulation · no live scores, no interruptions.'}{' '}
+            ? 'Diagnostic practice: certainty tags are optional.'
+            : 'NTA simulation: no live scores, no interruptions.'}{' '}
           Your progress is saved on this device.{' '}
           {attempt.grace > 0 && `${attempt.grace / 60} min grace used on this question.`}
         </p>
@@ -590,7 +577,6 @@ export function Simulator() {
         <div className="modal-symbol">
           <BookOpen size={25} />
         </div>
-        <span className="eyebrow">THE NEXT PART IS WHERE IT CLICKS.</span>
         <h2 id="submit-title">Ready to see the bigger picture?</h2>
         <p className="muted">
           Your answers become a personal repair plan. Unanswered questions receive zero marks, not a

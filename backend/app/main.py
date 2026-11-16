@@ -5,6 +5,7 @@ import io
 import json
 import os
 import secrets
+import uuid
 from pathlib import Path
 from typing import Annotated
 
@@ -19,6 +20,7 @@ from starlette.concurrency import run_in_threadpool
 from starlette.formparsers import MultiPartParser
 
 from . import gemini
+from .errors import EngineError, revision
 from .schemas import CoachRequest, Exam, ExtractionRequest, Model, ValidationRequest
 from .symbolic import verify_bounded
 
@@ -51,6 +53,7 @@ validation_queue = asyncio.Semaphore(2)
 
 @app.middleware("http")
 async def request_guard(request: Request, call_next):
+    request.state.request_id = uuid.uuid4().hex[:12]
     # Hosts may probe the container over private cleartext HTTP before TLS-edge
     # routing is enabled. Only this credential-free GET is exempt; never relax
     # transport checks for a POST or an API route to make readiness pass.
@@ -77,6 +80,22 @@ async def request_guard(request: Request, call_next):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["Referrer-Policy"] = "no-referrer"
     return response
+
+
+@app.exception_handler(EngineError)
+async def safe_engine_error(request: Request, exc: EngineError):
+    return JSONResponse(
+        {
+            "detail": exc.detail,
+            "diagnostic": {
+                "code": exc.code,
+                "stage": exc.stage,
+                "request_id": request.state.request_id,
+                "revision": revision(),
+            },
+        },
+        status_code=exc.status_code,
+    )
 
 
 @app.exception_handler(RequestValidationError)
@@ -109,6 +128,7 @@ async def health():
         "service": "targetjee-engine",
         "schema": "targetjee.item.v2",
         "persistence": "none",
+        "revision": revision(),
     }
 
 
@@ -197,7 +217,12 @@ async def forge(
             # Translate only known verifier messages; never echo arbitrary
             # worker/model text or exception contents into a BYOK response.
             status, detail = forge_rejection(exc)
-            raise HTTPException(status, detail) from None
+            raise EngineError(
+                status,
+                detail,
+                "verification_timeout" if status == 503 else "verification_rejected",
+                "verification",
+            ) from None
         for item, result in zip(items, verification, strict=True):
             # Never trust the model's display string over the checked expression.
             for option in item.options:

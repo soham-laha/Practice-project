@@ -1,5 +1,7 @@
 # Final repository review
 
+> **Historical review:** this document records the earlier merged audit. The subsequent requested workbook redesign, local assistant and new diagnostic/test results are recorded in [WORKBOOK_REDESIGN.md](WORKBOOK_REDESIGN.md); neither report implies production deployment or live model acceptance.
+
 **16 November 2026 · TargetJEE Engine · `soham-laha/Practice-project`**
 
 Reviewed on `arena/33825016-practice-project`, based on merged `main` commit `6b0e358e246ce5630cff59c8ad4b09c0b0c6210e` (PR #5). This report supersedes older documents' “current maintenance is verification-only” descriptions: **this review includes application/security fixes that are not yet deployed.** Historical public acceptance remains in [AUDIT_REPORT.md](AUDIT_REPORT.md).

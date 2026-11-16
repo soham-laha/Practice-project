@@ -9,21 +9,19 @@ import {
   Check,
   ShieldCheck,
   ArrowRight,
-  Sparkles,
   KeyRound,
-  ScanLine,
   LoaderCircle,
-  Target,
-  Lightbulb,
-  Braces,
-  FlaskConical,
+  Copy,
+  AlertCircle,
 } from 'lucide-react';
 import { useApp } from './providers';
 import { ExamSelect } from './exam-select';
 import { MathText } from './math';
-import { apiRequest } from '@/lib/api';
+import { LocalAssistant } from './local-assistant';
+import { apiRequest, ApiError, checkEngine, diagnosticReceipt } from '@/lib/api';
 import { itemSchema, type Item } from '@/lib/types';
 import { KEYS } from '@/lib/storage';
+
 export function Forge() {
   const { exam, model, setModel, hasKey, setKeyModal } = useApp(),
     router = useRouter();
@@ -32,9 +30,16 @@ export function Forge() {
     [file, setFile] = useState<File | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
+    [failure, setFailure] = useState<ApiError | null>(null),
+    [usedModel, setUsedModel] = useState(model),
+    [copied, setCopied] = useState(''),
+    [engine, setEngine] = useState(''),
+    [checking, setChecking] = useState(false),
     [items, setItems] = useState<Item[]>([]);
   function chooseFile(f: File | undefined) {
     setError('');
+    setFailure(null);
+    setItems([]);
     setFile(null);
     if (!f) return;
     if (f.size > 20 * 1024 * 1024) {
@@ -58,8 +63,12 @@ export function Forge() {
       setKeyModal(true);
       return;
     }
+    if (busy) return;
     setError('');
+    setFailure(null);
+    setCopied('');
     setItems([]);
+    setUsedModel(model);
     if (tab === 'text' && text.trim().length < 10) {
       setError('Paste a complete problem, at least 10 characters.');
       return;
@@ -84,25 +93,31 @@ export function Forge() {
         body,
       );
       if (!Array.isArray(result.items) || !result.items.length || result.items.length > 5)
-        throw new Error('The forge returned an invalid item set. No drill was created.');
+        throw new Error();
       const parsed: Item[] = result.items.map((i: unknown) => itemSchema.parse(i));
       if (
         parsed.some((i) => i.exam !== exam) ||
         new Set(parsed.map((i) => i.id)).size !== parsed.length
       )
-        throw new Error(
-          'Generated items do not match the requested exam or have duplicate IDs. Please try again.',
-        );
+        throw new Error();
       setItems(parsed);
     } catch (e) {
-      setError(
-        e instanceof Error ? e.message : 'The forge could not complete this problem. Try again.',
-      );
+      if (e instanceof ApiError) {
+        setError(e.message);
+        setFailure(e);
+      } else
+        setError(
+          e instanceof Error && !e.message.startsWith('[') && e.message.length < 600
+            ? e.message ||
+                'The returned drill did not pass the client contract. No drill was created.'
+            : 'The returned drill did not pass the client contract. No drill was created.',
+        );
     } finally {
       setBusy(false);
     }
   }
   function begin() {
+    if (!items.length || items.some((item) => item.exam !== exam)) return;
     try {
       sessionStorage.setItem(KEYS.forged, JSON.stringify(items));
       router.push('/simulator?start=forged');
@@ -112,51 +127,65 @@ export function Forge() {
       );
     }
   }
+  const stage = failure?.diagnostic?.stage;
+  const quotaLimited = failure?.diagnostic?.code === 'provider_quota';
+  const resultMatchesExam = items.length > 0 && items.every((item) => item.exam === exam);
   return (
     <>
-      <div className="page-title split-heading">
+      <header className="page-title split-heading forge-heading">
         <div>
-          <span className="eyebrow">YOUR TEXTBOOK. A NEW KIND OF PRACTICE.</span>
-          <h1>
-            Give a good problem <em>a sharper edge.</em>
-          </h1>
-          <p>
-            Bring something you’re studying. The forge turns it into a four-option drill with three
-            meaningful wrong turns, then checks the algebra.
-          </p>
+          <h1>Build a practice drill.</h1>
+          <p>Bring one complete problem. Review what was extracted before you begin.</p>
         </div>
-        <ExamSelect />
-      </div>
+        <ExamSelect disabled={busy} />
+      </header>
       <div className="forge-grid">
-        <section className="forge-form card">
+        <section className="forge-form" aria-labelledby="source-title">
           <div className="panel-heading">
-            <h2>Your problem goes here.</h2>
-            <span className="pill accent">
-              <ScanLine size={12} />
-              Item forge
-            </span>
+            <h2 id="source-title">The source problem</h2>
+            <span className="tiny-text">Text, image or PDF</span>
           </div>
           <div className="input-tabs" role="tablist" aria-label="Problem source">
             {[
-              { id: 'text', label: 'Paste text', Icon: FileText },
-              { id: 'image', label: 'Upload image', Icon: ImageIcon },
-              { id: 'pdf', label: 'Upload PDF', Icon: Upload },
+              { id: 'text', label: 'Paste text', short: 'Text', Icon: FileText },
+              { id: 'image', label: 'Upload image', short: 'Image', Icon: ImageIcon },
+              { id: 'pdf', label: 'Upload PDF', short: 'PDF', Icon: Upload },
             ].map((v) => (
               <button
                 key={v.id}
                 role="tab"
+                aria-label={v.label}
                 aria-selected={tab === v.id}
                 aria-controls="source-panel"
                 id={`tab-${v.id}`}
                 disabled={busy}
+                tabIndex={tab === v.id ? 0 : -1}
+                onKeyDown={(event) => {
+                  const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
+                  if (!keys.includes(event.key)) return;
+                  event.preventDefault();
+                  const order = ['text', 'image', 'pdf'] as const;
+                  const current = order.indexOf(tab);
+                  const next =
+                    event.key === 'Home'
+                      ? 0
+                      : event.key === 'End'
+                        ? 2
+                        : (current + (event.key === 'ArrowRight' ? 1 : 2)) % 3;
+                  const target = document.getElementById(`tab-${order[next]}`);
+                  target?.click();
+                  target?.focus();
+                }}
                 onClick={() => {
                   setTab(v.id as typeof tab);
                   setFile(null);
                   setError('');
+                  setFailure(null);
+                  setItems([]);
                 }}
               >
                 <v.Icon size={16} />
-                {v.label}
+                {v.short}
               </button>
             ))}
           </div>
@@ -169,28 +198,31 @@ export function Forge() {
                 <textarea
                   id="problem-text"
                   value={text}
-                  onChange={(e) => setText(e.target.value)}
+                  onChange={(e) => {
+                    setText(e.target.value);
+                    setItems([]);
+                  }}
                   placeholder="A block of mass 2 kg rests in a lift accelerating upward at 3 m/s². Take g = 10 m/s². Find the normal force…"
                   maxLength={30000}
                   disabled={busy}
                 />
-                <p className="tiny-text">
-                  Include all values, units and any necessary diagram descriptions.{' '}
-                  {text.length.toLocaleString()} / 30,000
+                <p className="tiny-text source-helper">
+                  Include values, units and necessary diagram descriptions.{' '}
+                  <span>{text.length.toLocaleString()} / 30,000</span>
                 </p>
               </>
             ) : (
-              <label className="upload-zone">
-                <Upload size={30} />
+              <label className={`upload-zone ${file ? 'has-file' : ''}`}>
+                <Upload size={28} />
                 <strong>
                   {file ? file.name : `Choose a ${tab === 'pdf' ? 'PDF' : 'problem photo'}`}
                 </strong>
                 <small>
                   {file
-                    ? `${(file.size / 1024 / 1024).toFixed(2)} MB · ready to forge`
+                    ? `${(file.size / 1024 / 1024).toFixed(2)} MB, ready to forge`
                     : tab === 'pdf'
-                      ? 'Unencrypted PDF · up to 30 pages · max 20 MB'
-                      : 'PNG or JPEG · up to 25 megapixels · max 20 MB'}
+                      ? 'Unencrypted PDF, up to 30 pages, max 20 MB'
+                      : 'PNG or JPEG, up to 25 megapixels, max 20 MB'}
                 </small>
                 <span className="button secondary small-button">
                   {file ? 'Choose another file' : 'Browse files'}
@@ -205,22 +237,30 @@ export function Forge() {
               </label>
             )}
           </div>
-          <label className="field-label" htmlFor="forge-model">
-            Your Gemini model
-          </label>
-          <select
-            id="forge-model"
-            value={model}
-            onChange={(e) => setModel(e.target.value as typeof model)}
-            disabled={busy}
-          >
-            <option value="gemini-flash-latest">Gemini Flash · balanced</option>
-            <option value="gemini-flash-lite-latest">Gemini Flash Lite · lightweight</option>
-          </select>
-          <div className="mode-detail">
-            <span className="pill">JEE {exam === 'main' ? 'Main' : 'Advanced'}</span>
-            <span className="pill">+4 / −{exam === 'main' ? '1' : '1 or 2'}</span>
-            <span className="pill">{exam === 'main' ? '90–180' : '180–300'}s benchmark</span>
+          <div className="forge-settings">
+            <div>
+              <label className="field-label" htmlFor="forge-model">
+                Your Gemini model
+              </label>
+              <select
+                id="forge-model"
+                value={model}
+                onChange={(e) => {
+                  setModel(e.target.value as typeof model);
+                  setItems([]);
+                }}
+                disabled={busy}
+              >
+                <option value="gemini-flash-latest">Gemini Flash (balanced)</option>
+                <option value="gemini-flash-lite-latest">Gemini Flash Lite (lightweight)</option>
+              </select>
+            </div>
+            <p className="tiny-text">
+              JEE {exam === 'main' ? 'Main' : 'Advanced'}
+              <br />
+              +4 / −{exam === 'main' ? '1' : '1 or 2'} marks,{' '}
+              {exam === 'main' ? '90–180' : '180–300'}s benchmark
+            </p>
           </div>
           <div className="form-bottom">
             <p className="tiny-text">
@@ -228,94 +268,161 @@ export function Forge() {
               on our server.
             </p>
             <button className="button primary" disabled={busy} onClick={() => void generate()}>
-              {busy ? (
-                <LoaderCircle size={15} className="spinner" />
-              ) : hasKey ? (
-                <Sparkles size={15} />
-              ) : (
-                <KeyRound size={15} />
-              )}{' '}
+              {busy ? <LoaderCircle size={16} className="spinner" /> : <KeyRound size={16} />}
               {busy ? 'Forging & checking…' : hasKey ? 'Forge my drill' : 'Add key to forge'}
-              <ArrowRight size={15} />
+              <ArrowRight size={16} />
             </button>
           </div>
-          <p className="error-text" role="alert">
-            {error}
-          </p>
           {busy && (
-            <div className="note-box">
-              <FlaskConical size={16} />
-              <span>
-                Extraction → misconception paths → bounded symbolic checks. This can take up to two
-                minutes. Unverified items are never released.
-              </span>
+            <p className="forge-working" role="status">
+              Waiting for Gemini and the algebra check. Allow up to two minutes. No automatic retry
+              or model switch.
+            </p>
+          )}
+          {error && (
+            <div className="forge-error" role="alert">
+              <div className="forge-error-title">
+                <AlertCircle size={18} />
+                <h3>
+                  {stage === 'format'
+                    ? 'The generated format was rejected'
+                    : stage === 'verification'
+                      ? 'The algebra check did not pass'
+                      : quotaLimited
+                        ? 'Gemini reported a quota limit'
+                        : failure?.status === 429
+                          ? 'The API is busy'
+                          : 'The request was not completed'}
+                </h3>
+              </div>
+              <p>{error}</p>
+              {failure && (
+                <>
+                  <p className="tiny-text">
+                    {stage === 'format' || stage === 'verification'
+                      ? 'Gemini answered, but no usable drill passed the checks. Spare quota does not prevent this kind of failure.'
+                      : quotaLimited
+                        ? 'Gemini returned a quota response for this request. There is no automatic retry.'
+                        : failure.status === 429
+                          ? 'The API may have reached its worker capacity. This does not establish that Gemini quota was exhausted.'
+                          : 'This message does not establish that your quota was exhausted or that your key is invalid.'}
+                  </p>
+                  <details className="diagnostic-details">
+                    <summary>Technical details (no source or key)</summary>
+                    <pre>{diagnosticReceipt(failure, usedModel)}</pre>
+                    <button
+                      className="text-link"
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(
+                            diagnosticReceipt(failure, usedModel),
+                          );
+                          setCopied('Diagnostics copied.');
+                        } catch {
+                          setCopied('Copy unavailable. Select the technical details above.');
+                        }
+                      }}
+                    >
+                      <Copy size={14} />
+                      Copy safe diagnostics
+                    </button>
+                    <span className="tiny-text" role="status">
+                      {copied}
+                    </span>
+                  </details>
+                </>
+              )}
+              <Link className="text-link" href="/simulator?start=reference">
+                Continue with a reference drill <ArrowRight size={15} />
+              </Link>
             </div>
           )}
         </section>
-        <aside className="forge-aside card">
-          <span className="card-kicker">
-            <ShieldCheck size={16} />
-            NOT JUST RANDOM WRONG ANSWERS
-          </span>
-          <h2>
-            Every wrong turn
-            <br />
-            has a reason.
-          </h2>
-          <ul className="forge-checks">
-            <li>
-              <Target size={18} />
-              <div>
-                <strong>Three real misconception paths</strong>
-                <p>Options are derived from plausible invalid steps—not made-up numbers.</p>
-              </div>
-            </li>
-            <li>
-              <Braces size={18} />
-              <div>
-                <strong>Algebra before delivery</strong>
+        <aside className="forge-aside">
+          <section className="forge-method" aria-labelledby="method-title">
+            <ShieldCheck size={22} />
+            <h2 id="method-title">What makes it a drill?</h2>
+            <ol>
+              <li>
+                <strong>Four distinct options</strong>
                 <p>
-                  SymPy checks key and trap certificates, dimensional vectors, domains and
-                  distinctness.
+                  One keyed answer and three plausible wrong turns, each with an explicit mistaken
+                  step.
                 </p>
-              </div>
-            </li>
-            <li>
-              <Lightbulb size={18} />
-              <div>
-                <strong>A way back, built in</strong>
-                <p>Each trap includes a guardrail and a 45-second recovery check.</p>
-              </div>
-            </li>
-          </ul>
-          <div className="note-box">
-            <ShieldCheck size={16} />
-            <span>
+              </li>
+              <li>
+                <strong>A checked certificate</strong>
+                <p>
+                  SymPy checks algebraic consistency, domains, unit vectors and answer distinctness.
+                </p>
+              </li>
+              <li>
+                <strong>A way to repair it</strong>
+                <p>
+                  A guardrail, a counterfactual and a 45-second recovery question for each trap.
+                </p>
+              </li>
+            </ol>
+            <p className="tiny-text">
               Symbolic consistency is not proof of source interpretation. Check the extracted
               prompt, units and diagram descriptions before starting.
-            </span>
+            </p>
+          </section>
+          <section className="service-check">
+            <h3>Having trouble generating?</h3>
+            <p className="tiny-text">
+              Check the API without sending a key or contacting Gemini. This does not test model
+              access or quota.
+            </p>
+            <button
+              className="text-link"
+              disabled={checking}
+              onClick={async () => {
+                setChecking(true);
+                try {
+                  const revision = await checkEngine();
+                  setEngine(
+                    `API available. API revision: ${revision}. Gemini access has not been tested.`,
+                  );
+                } catch {
+                  setEngine(
+                    'API did not respond: it may be warming up, unavailable or not configured. Gemini was not contacted.',
+                  );
+                } finally {
+                  setChecking(false);
+                }
+              }}
+            >
+              {checking ? 'Checking the API…' : 'Check API connection (no key)'}
+            </button>
+            <p className="tiny-text" role="status">
+              {engine}
+            </p>
+            <p className="build-revision">
+              Interface {process.env.NEXT_PUBLIC_APP_REVISION || 'workspace'}
+            </p>
+          </section>
+          <LocalAssistant />
+          <div className="forge-help-links">
+            <Link href="/simulator?start=reference" className="text-link">
+              Try a free reference drill <ArrowRight size={15} />
+            </Link>
+            <button className="text-link" onClick={() => setKeyModal(true)}>
+              <KeyRound size={15} />
+              {hasKey ? 'Manage your browser key' : 'How bring-your-own-key works'}
+            </button>
           </div>
-          <Link href="/simulator?start=reference" className="text-link" style={{ marginTop: 20 }}>
-            Just exploring? Try a reference drill <ArrowRight size={14} />
-          </Link>
-          <button
-            className="text-link"
-            style={{ marginTop: 15, display: 'flex' }}
-            onClick={() => setKeyModal(true)}
-          >
-            <KeyRound size={14} />
-            {hasKey ? 'Manage your browser key' : 'How bring-your-own-key works'}
-          </button>
         </aside>
       </div>
-      {items.length > 0 && (
-        <section className="forge-result card" role="status">
-          <span className="card-kicker">
-            <Check size={16} />
-            ALGEBRAIC CERTIFICATES PASSED
-          </span>
+      {resultMatchesExam && (
+        <section className="forge-result" role="status">
+          <p className="result-status">
+            <Check size={17} />
+            Algebraic certificates passed
+          </p>
           <h2>
-            {items.length} question{items.length > 1 ? 's' : ''}, ready for a fresh perspective.
+            Review {items.length === 1 ? 'the extracted problem' : `these ${items.length} problems`}
+            .
           </h2>
           <p className="muted tiny-text">
             Please verify that these extracted prompts faithfully match your source. Parameters are
@@ -327,13 +434,13 @@ export function Forge() {
               <MathText text={i.prompt} />
               {i.diagram_anchors.length > 0 && (
                 <div className="note-box">
-                  {i.diagram_anchors.map((a) => `${a.label}: ${a.description}`).join(' · ')}
+                  {i.diagram_anchors.map((a) => `${a.label}: ${a.description}`).join('; ')}
                 </div>
               )}
             </div>
           ))}
           <button className="button primary" onClick={begin}>
-            Looks right. Start this drill <ArrowRight size={15} />
+            Looks right. Start this drill <ArrowRight size={16} />
           </button>
         </section>
       )}

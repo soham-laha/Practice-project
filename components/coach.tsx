@@ -5,6 +5,7 @@ import { type Session } from '@/lib/types';
 import { apiRequest } from '@/lib/api';
 import { useApp } from './providers';
 import { MathText } from './math';
+import Link from 'next/link';
 export function Coach({ session, sample = false }: { session?: Session; sample?: boolean }) {
   const { hasKey, setKeyModal, exam, model } = useApp(),
     [messages, setMessages] = useState<{ role: 'user' | 'coach'; text: string }[]>([]),
@@ -107,7 +108,7 @@ export function Coach({ session, sample = false }: { session?: Session; sample?:
         <>
           <button className="button secondary coach-connect" onClick={() => setKeyModal(true)}>
             <KeyRound size={15} />
-            Connect Gemini to meet your coach <ArrowUpRight size={14} />
+            Add key for coaching <ArrowUpRight size={14} />
           </button>
           <div className="privacy-note">
             <ShieldCheck size={16} />
@@ -129,7 +130,7 @@ export function Coach({ session, sample = false }: { session?: Session; sample?:
           <div className="coach-messages" aria-live="polite">
             {messages.map((m, i) => (
               <div className={`chat-message ${m.role === 'user' ? 'user' : ''}`} key={i}>
-                <strong>{m.role === 'user' ? 'YOU' : 'YOUR COACH'}</strong>
+                <strong>{m.role === 'user' ? 'You' : 'Coach'}</strong>
                 <MathText text={m.text} />
               </div>
             ))}
@@ -172,11 +173,13 @@ export function Coach({ session, sample = false }: { session?: Session; sample?:
         </>
       )}
       <div className="model-label">
-        <span className="status-dot" />
         {model === 'gemini-flash-latest' ? 'Gemini Flash' : 'Gemini Flash Lite'}
-        <span>·</span>
+        <span aria-hidden="true">/</span>
         <button onClick={() => setKeyModal(true)}>Manage key & model</button>
       </div>
+      <Link className="text-link" href="/forge#local-assistant">
+        Try on-device text help
+      </Link>
       <p className="tiny-text" style={{ marginTop: 10 }}>
         AI suggestions can be wrong and are not SymPy-verified drill items. Use the forge to
         validate a full new drill.

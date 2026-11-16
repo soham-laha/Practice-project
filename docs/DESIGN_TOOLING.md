@@ -1,5 +1,7 @@
 # Hallmark installation and design audit
 
+> **Historical review:** this document records the earlier merged audit. The subsequent requested workbook redesign, local assistant and new diagnostic/test results are recorded in [WORKBOOK_REDESIGN.md](WORKBOOK_REDESIGN.md); neither report implies production deployment or live model acceptance.
+
 Date: **16 November 2026**. This is an **audit of the existing app**, not a full Hallmark redesign or a claim that it passed every Hallmark rule.
 
 ## Installation receipt
