@@ -6,7 +6,11 @@ export default defineConfig({
   workers: 1,
   timeout: 45000,
   expect: { timeout: 10000 },
-  reporter: [['list'], ['html', { open: 'never' }]],
+  // Surface actionable assertions in Checks even when signed artifact/log
+  // downloads are unavailable; retain the HTML/traces for normal inspection.
+  reporter: process.env.GITHUB_ACTIONS
+    ? [['list'], ['github'], ['html', { open: 'never' }]]
+    : [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: process.env.TEST_BASE_URL || 'http://localhost:3000',
     headless: true,

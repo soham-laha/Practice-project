@@ -15,6 +15,7 @@ import sys
 
 import sympy as sp
 
+from .limits import SYMBOLIC_WALL_SECONDS
 from .schemas import Item
 
 FUNCTIONS = {
@@ -152,7 +153,7 @@ def verify_bounded(items: list[Item]) -> list[dict]:
             check=False,
             capture_output=True,
             text=True,
-            timeout=8,
+            timeout=SYMBOLIC_WALL_SECONDS,
             env={
                 "PYTHONHASHSEED": "0",
                 "PATH": os.environ.get("PATH", ""),

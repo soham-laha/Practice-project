@@ -3,11 +3,13 @@
 import json
 import sys
 
+from .limits import SYMBOLIC_CPU_SECONDS, SYMBOLIC_MEMORY_BYTES
+
 try:
     import resource
 
-    resource.setrlimit(resource.RLIMIT_CPU, (6, 6))
-    resource.setrlimit(resource.RLIMIT_AS, (512 * 1024 * 1024, 512 * 1024 * 1024))
+    resource.setrlimit(resource.RLIMIT_CPU, (SYMBOLIC_CPU_SECONDS, SYMBOLIC_CPU_SECONDS))
+    resource.setrlimit(resource.RLIMIT_AS, (SYMBOLIC_MEMORY_BYTES, SYMBOLIC_MEMORY_BYTES))
 except (ImportError, ValueError):
     pass
 from .schemas import Item
