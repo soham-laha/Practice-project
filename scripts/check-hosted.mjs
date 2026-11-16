@@ -64,6 +64,10 @@ export async function checkHostedFrontend(value) {
   for (const model of ['gemini-flash-latest', 'gemini-flash-lite-latest']) {
     const response = await request('/api/engine/v1/extractions', {
       method: 'POST',
+      // Render Free can take 50s+ to wake. Keep static page probes at 20s,
+      // but outlast the proxy's bounded 110s upstream timeout for this
+      // keyless auth check. No retry or acceptance of unavailable responses.
+      signal: AbortSignal.timeout(120000),
       headers: { 'Content-Type': 'application/json', Origin: frontend },
       body: JSON.stringify({
         text: 'A complete textbook problem is supplied here.',
