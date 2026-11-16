@@ -86,3 +86,27 @@ def test_contract_requires_one_key_three_traps(items):
     raw["exam"] = "advanced"
     with pytest.raises(ValidationError):
         Item.model_validate(raw)
+
+
+def test_coordinate_options_and_vectors_supported(items):
+    coord_item = items[0].model_copy(deep=True)
+    coord_item.prompt = "Find the coordinates of the point of intersection of the straight lines $2x - 3y = 1$ and $5y - x = 3$."
+    coord_item.answer_expression = "(2, 1)"
+    coord_item.options[0].latex = "(1, 2)"
+    coord_item.options[0].expression = "(1, 2)"
+    coord_item.options[0].derived_expression = "(1, 2)"
+    coord_item.options[1].latex = "(2, 1)"
+    coord_item.options[1].expression = "(2, 1)"
+    coord_item.options[1].derived_expression = "(2, 1)"
+    coord_item.options[2].latex = "(2, -1)"
+    coord_item.options[2].expression = "(2, -1)"
+    coord_item.options[2].derived_expression = "(2, -1)"
+    coord_item.options[3].latex = "(-2, 1)"
+    coord_item.options[3].expression = "(-2, 1)"
+    coord_item.options[3].derived_expression = "(-2, 1)"
+    result = verify_item(coord_item)
+    assert result["valid"] is True
+    assert result["canonical_options"]["A"] == "(1, 2)"
+    assert result["canonical_options"]["B"] == "(2, 1)"
+    assert result["canonical_options"]["C"] == "(2, -1)"
+    assert result["canonical_options"]["D"] == "(-2, 1)"

@@ -25,6 +25,7 @@ import { ExamSelect } from './exam-select';
 import { MathText, MathExpr } from './math';
 import { PACING } from '@/lib/psychometrics';
 import { referenceItems, lockOptionOrder } from '@/lib/seeds';
+import { regenerateRuntimeDistractors } from '@/lib/local-generator';
 import { KEYS } from '@/lib/storage';
 import { itemSchema, sessionSchema, type Item, type Session, type Attempt } from '@/lib/types';
 
@@ -247,6 +248,19 @@ export function Simulator() {
       setSubmitting(false);
     }
   }
+  function regenerateOptions() {
+    if (!active) return;
+    const currentItem = active.session.items[active.index];
+    const refreshed = regenerateRuntimeDistractors(currentItem);
+    setActive({
+      ...active,
+      session: {
+        ...active.session,
+        items: active.session.items.map((it, i) => (i === active.index ? refreshed : it)),
+      },
+    });
+    notify('Distractors refreshed with certified alternatives.');
+  }
   if (!hydrated)
     return (
       <div className="loading-state">
@@ -448,6 +462,20 @@ export function Simulator() {
                 {attempt.selected === o.id && <Check size={17} />}
               </button>
             ))}
+          </div>
+          <div
+            className="options-toolbar"
+            style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}
+          >
+            <button
+              className="text-link"
+              type="button"
+              style={{ fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+              onClick={regenerateOptions}
+            >
+              <RotateCcw size={13} />
+              Regenerate distractors
+            </button>
           </div>
           {session.diagnostic && (
             <div className="diagnostic-tags">
