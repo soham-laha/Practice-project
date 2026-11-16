@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: targetjee-studio-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: TARGETJEE_FRONTEND_ORIGINS
+        sync: false
+      - key: TARGETJEE_REQUIRE_HTTPS
+        value: 'true'

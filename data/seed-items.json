@@ -1,0 +1,1250 @@
+[
+  {
+    "schema_version": "targetjee.item.v2",
+    "id": "main-root",
+    "exam": "main",
+    "subject": "Mathematics",
+    "topic": "Domain restrictions",
+    "prompt": "For a real number $x=-3$, what is the value of $\\sqrt{x^2}$?",
+    "context": "A familiar expression. One important condition.",
+    "options": [
+      {
+        "id": "A",
+        "latex": "-3",
+        "expression": "-3",
+        "derived_expression": "-3",
+        "unit": [0, 0, 0],
+        "slope": -0.7,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Lost absolute value",
+          "why_plausible": "Squaring and square-rooting look like inverse operations.",
+          "first_wrong_pivot": "You replaced the principal root of x² by x rather than |x|.",
+          "counterfactual_valid_when": "The identity √(x²)=x holds when x is nonnegative.",
+          "avoidance_rule": "Before cancelling a square with a root, check the sign.",
+          "recovery_check": {
+            "question": "If $x=-5$, evaluate $\\sqrt{x^2}$.",
+            "answer": "5",
+            "expression": "5",
+            "target_expression": "5",
+            "explanation": "The principal square root of 25 is 5, never −5."
+          }
+        }
+      },
+      {
+        "id": "B",
+        "latex": "3",
+        "expression": "3",
+        "derived_expression": "sqrt((-3)**2)",
+        "unit": [0, 0, 0],
+        "slope": 1.2,
+        "intercept": 0.0,
+        "trap": null
+      },
+      {
+        "id": "C",
+        "latex": "9",
+        "expression": "9",
+        "derived_expression": "(-3)**2",
+        "unit": [0, 0, 0],
+        "slope": -0.2,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Stopped one step early",
+          "why_plausible": "The inner square is the most visible arithmetic step.",
+          "first_wrong_pivot": "You evaluated x²=9 but never took its principal square root.",
+          "counterfactual_valid_when": "9 would answer the different question: find x².",
+          "avoidance_rule": "Keep track of the outermost operation.",
+          "recovery_check": {
+            "question": "Evaluate $\\sqrt{(-4)^2}$.",
+            "answer": "4",
+            "expression": "4",
+            "target_expression": "4",
+            "explanation": "The square gives 16; the outer root gives 4."
+          }
+        }
+      },
+      {
+        "id": "D",
+        "latex": "0",
+        "expression": "0",
+        "derived_expression": "-3+3",
+        "unit": [0, 0, 0],
+        "slope": 0.5,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Sign cancellation",
+          "why_plausible": "A negative value and a positive square can suggest cancellation.",
+          "first_wrong_pivot": "You treated nested operations as an additive cancellation.",
+          "counterfactual_valid_when": "The principal root would be zero only when x=0.",
+          "avoidance_rule": "Nested operations are not sums; simplify from the inside out.",
+          "recovery_check": {
+            "question": "For which real $x$ is $\\sqrt{x^2}=0$?",
+            "answer": "0",
+            "expression": "0",
+            "target_expression": "0",
+            "explanation": "Only x=0 has a square equal to zero."
+          }
+        }
+      }
+    ],
+    "correct_id": "B",
+    "answer_expression": "sqrt((-3)**2)",
+    "solution": "The principal square root is nonnegative: $\\sqrt{x^2}=|x|$. At $x=-3$, $|x|=3$.",
+    "domain": {},
+    "expected_unit": [0, 0, 0],
+    "diagram_anchors": [],
+    "beta_seconds": 90,
+    "alpha": 1.0,
+    "a": 1.0,
+    "b": 0,
+    "c": 0.25,
+    "positive_marks": 4,
+    "negative_marks": 1,
+    "parameter_source": "illustrative"
+  },
+  {
+    "schema_version": "targetjee.item.v2",
+    "id": "main-frame",
+    "exam": "main",
+    "subject": "Physics",
+    "topic": "Reference frames",
+    "prompt": "A $2\\,\\mathrm{kg}$ block is at rest relative to a lift accelerating upward at $3\\,\\mathrm{m\\,s^{-2}}$. Take $g=10\\,\\mathrm{m\\,s^{-2}}$. What is the normal force in newtons?",
+    "context": "Choose your frame before writing the force balance.",
+    "options": [
+      {
+        "id": "A",
+        "latex": "20",
+        "expression": "20",
+        "derived_expression": "2*10",
+        "unit": [1, 1, -2],
+        "slope": -0.7,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Equilibrium in an accelerating frame",
+          "why_plausible": "The block is not moving relative to the lift.",
+          "first_wrong_pivot": "You used N=mg in an accelerating frame without a pseudo-force.",
+          "counterfactual_valid_when": "20 N is valid for a lift with zero acceleration.",
+          "avoidance_rule": "Rest relative to an accelerating frame is not inertial equilibrium.",
+          "recovery_check": {
+            "question": "A $1\\,kg$ mass accelerates upward at $2\\,m/s^2$; $g=10$. Find $N$ in newtons.",
+            "answer": "12",
+            "expression": "12",
+            "target_expression": "12",
+            "explanation": "N=m(g+a)=12 N."
+          }
+        }
+      },
+      {
+        "id": "B",
+        "latex": "14",
+        "expression": "14",
+        "derived_expression": "2*(10-3)",
+        "unit": [1, 1, -2],
+        "slope": 0.35,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Acceleration sign reversal",
+          "why_plausible": "Apparent weight decreases in some lift problems.",
+          "first_wrong_pivot": "You used g−a even though acceleration points upward.",
+          "counterfactual_valid_when": "14 N is valid if this lift accelerates downward at 3 m/s².",
+          "avoidance_rule": "Draw acceleration, not velocity, before choosing the sign.",
+          "recovery_check": {
+            "question": "A $2\\,kg$ block accelerates downward at $1\\,m/s^2$; $g=10$. Find $N$.",
+            "answer": "18",
+            "expression": "18",
+            "target_expression": "18",
+            "explanation": "N=m(g−a)=18 N."
+          }
+        }
+      },
+      {
+        "id": "C",
+        "latex": "26",
+        "expression": "26",
+        "derived_expression": "2*(10+3)",
+        "unit": [1, 1, -2],
+        "slope": 1.2,
+        "intercept": 0.0,
+        "trap": null
+      },
+      {
+        "id": "D",
+        "latex": "6",
+        "expression": "6",
+        "derived_expression": "2*3",
+        "unit": [1, 1, -2],
+        "slope": 0.5,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Net force mistaken for normal",
+          "why_plausible": "The problem supplies mass and acceleration directly.",
+          "first_wrong_pivot": "You equated the contact force to ma instead of the net force.",
+          "counterfactual_valid_when": "6 N is the net upward force, not the normal force.",
+          "avoidance_rule": "Write the sum of all forces before evaluating any one force.",
+          "recovery_check": {
+            "question": "If $N=30\\,N$ and $mg=20\\,N$, find the net upward force in newtons.",
+            "answer": "10",
+            "expression": "10",
+            "target_expression": "10",
+            "explanation": "Net force is N−mg=10 N."
+          }
+        }
+      }
+    ],
+    "correct_id": "C",
+    "answer_expression": "2*10+2*3",
+    "solution": "In the inertial frame, $N-mg=ma$. Hence $N=m(g+a)=2(10+3)=26\\,\\mathrm{N}$.",
+    "domain": {},
+    "expected_unit": [1, 1, -2],
+    "diagram_anchors": [],
+    "beta_seconds": 120,
+    "alpha": 1.0,
+    "a": 1.0,
+    "b": 0,
+    "c": 0.25,
+    "positive_marks": 4,
+    "negative_marks": 1,
+    "parameter_source": "illustrative"
+  },
+  {
+    "schema_version": "targetjee.item.v2",
+    "id": "main-work",
+    "exam": "main",
+    "subject": "Chemistry",
+    "topic": "Thermodynamic signs",
+    "prompt": "A gas absorbs $100\\,\\mathrm{J}$ of heat and does $40\\,\\mathrm{J}$ of work on its surroundings. What is $\\Delta U$ in joules?",
+    "context": "Chemistry convention: work done on the system is positive.",
+    "options": [
+      {
+        "id": "A",
+        "latex": "140",
+        "expression": "140",
+        "derived_expression": "100+40",
+        "unit": [1, 2, -2],
+        "slope": -0.7,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Work convention drift",
+          "why_plausible": "Both quantities appear as positive magnitudes in the prompt.",
+          "first_wrong_pivot": "You added work done by the gas as though it were work done on it.",
+          "counterfactual_valid_when": "140 J is valid if 40 J of work is done on the gas instead.",
+          "avoidance_rule": "State the work convention before substituting magnitudes.",
+          "recovery_check": {
+            "question": "A gas absorbs $80\\,J$ and does $30\\,J$ of work. Find $\\Delta U$.",
+            "answer": "50",
+            "expression": "50",
+            "target_expression": "50",
+            "explanation": "80−30=50 J."
+          }
+        }
+      },
+      {
+        "id": "B",
+        "latex": "-60",
+        "expression": "-60",
+        "derived_expression": "40-100",
+        "unit": [1, 2, -2],
+        "slope": 0.35,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Reversed energy change",
+          "why_plausible": "The subtraction has the right size but the wrong order.",
+          "first_wrong_pivot": "You computed work minus heat for the internal-energy change.",
+          "counterfactual_valid_when": "−60 J is valid if the gas releases 100 J and receives 40 J of work.",
+          "avoidance_rule": "Heat entering increases U; work leaving decreases U.",
+          "recovery_check": {
+            "question": "Heat in is $50\\,J$; work out is $20\\,J$. Find $\\Delta U$.",
+            "answer": "30",
+            "expression": "30",
+            "target_expression": "30",
+            "explanation": "50−20=30 J."
+          }
+        }
+      },
+      {
+        "id": "C",
+        "latex": "60",
+        "expression": "60",
+        "derived_expression": "100-40",
+        "unit": [1, 2, -2],
+        "slope": 1.2,
+        "intercept": 0.0,
+        "trap": null
+      },
+      {
+        "id": "D",
+        "latex": "-140",
+        "expression": "-140",
+        "derived_expression": "-100-40",
+        "unit": [1, 2, -2],
+        "slope": 0.5,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Both signs reversed",
+          "why_plausible": "Expansion is associated with loss, so all terms may look negative.",
+          "first_wrong_pivot": "You treated absorbed heat as negative and work out as negative together.",
+          "counterfactual_valid_when": "−140 J is valid for 100 J released and 40 J of work done by the gas.",
+          "avoidance_rule": "Assign heat and work signs independently.",
+          "recovery_check": {
+            "question": "A gas releases $20\\,J$ and does $10\\,J$ of work. Find $\\Delta U$.",
+            "answer": "−30",
+            "expression": "-30",
+            "target_expression": "-30",
+            "explanation": "Both contributions reduce internal energy: −20−10=−30 J."
+          }
+        }
+      }
+    ],
+    "correct_id": "C",
+    "answer_expression": "100-40",
+    "solution": "With work on the gas $w=-40\\,J$, $\\Delta U=q+w=100-40=60\\,J$.",
+    "domain": {},
+    "expected_unit": [1, 2, -2],
+    "diagram_anchors": [],
+    "beta_seconds": 120,
+    "alpha": 1.0,
+    "a": 1.0,
+    "b": 0,
+    "c": 0.25,
+    "positive_marks": 4,
+    "negative_marks": 1,
+    "parameter_source": "illustrative"
+  },
+  {
+    "schema_version": "targetjee.item.v2",
+    "id": "main-derivative",
+    "exam": "main",
+    "subject": "Mathematics",
+    "topic": "Chain rule",
+    "prompt": "For $f(x)=(2x+1)^3$, evaluate $f\\prime(1)$.",
+    "context": "The inner derivative is easy to overlook.",
+    "options": [
+      {
+        "id": "A",
+        "latex": "27",
+        "expression": "27",
+        "derived_expression": "3*(2*1+1)**2",
+        "unit": [0, 0, 0],
+        "slope": -0.7,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Missing inner derivative",
+          "why_plausible": "The outer power rule produces a complete-looking expression.",
+          "first_wrong_pivot": "You differentiated the cube but omitted d(2x+1)/dx=2.",
+          "counterfactual_valid_when": "27 is valid for d(x+2)³/dx at x=1.",
+          "avoidance_rule": "Every outer derivative needs an inner derivative check.",
+          "recovery_check": {
+            "question": "For $h(x)=(3x)^2$, find $h\\prime(1)$.",
+            "answer": "18",
+            "expression": "18",
+            "target_expression": "18",
+            "explanation": "h′=2(3x)·3; at 1 this is 18."
+          }
+        }
+      },
+      {
+        "id": "B",
+        "latex": "54",
+        "expression": "54",
+        "derived_expression": "3*(2*1+1)**2*2",
+        "unit": [0, 0, 0],
+        "slope": 1.2,
+        "intercept": 0.0,
+        "trap": null
+      },
+      {
+        "id": "C",
+        "latex": "9",
+        "expression": "9",
+        "derived_expression": "(2*1+1)**2",
+        "unit": [0, 0, 0],
+        "slope": -0.2,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Power without coefficient",
+          "why_plausible": "Reducing the exponent feels like the whole power rule.",
+          "first_wrong_pivot": "You wrote (2x+1)² and lost both derivative multipliers.",
+          "counterfactual_valid_when": "9 is the value of (2x+1)² at x=1, not this derivative.",
+          "avoidance_rule": "Write n·u^(n−1)·u′ explicitly once.",
+          "recovery_check": {
+            "question": "Evaluate the derivative of $x^3$ at $x=2$.",
+            "answer": "12",
+            "expression": "12",
+            "target_expression": "12",
+            "explanation": "3x² evaluated at 2 is 12."
+          }
+        }
+      },
+      {
+        "id": "D",
+        "latex": "18",
+        "expression": "18",
+        "derived_expression": "2*(2*1+1)**2",
+        "unit": [0, 0, 0],
+        "slope": 0.5,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Outer exponent omitted",
+          "why_plausible": "The inner factor 2 is retained but the outer coefficient is not.",
+          "first_wrong_pivot": "You computed 2(2x+1)² instead of 6(2x+1)².",
+          "counterfactual_valid_when": "18 is valid for the derivative of (2x+1)³/3 at x=1.",
+          "avoidance_rule": "Check both the power coefficient and inner factor.",
+          "recovery_check": {
+            "question": "Find $\\frac{d}{dx}(2x+1)^2$ at $x=1$.",
+            "answer": "12",
+            "expression": "12",
+            "target_expression": "12",
+            "explanation": "2(2x+1)·2=12 at x=1."
+          }
+        }
+      }
+    ],
+    "correct_id": "B",
+    "answer_expression": "3*3**2*2",
+    "solution": "$f\\prime(x)=3(2x+1)^2\\cdot2$. At $x=1$, this is $6\\cdot9=54$.",
+    "domain": {},
+    "expected_unit": [0, 0, 0],
+    "diagram_anchors": [],
+    "beta_seconds": 120,
+    "alpha": 1.0,
+    "a": 1.0,
+    "b": 0,
+    "c": 0.25,
+    "positive_marks": 4,
+    "negative_marks": 1,
+    "parameter_source": "illustrative"
+  },
+  {
+    "schema_version": "targetjee.item.v2",
+    "id": "main-kinetic",
+    "exam": "main",
+    "subject": "Physics",
+    "topic": "Scaling laws",
+    "prompt": "A particle has kinetic energy $K$. Its momentum doubles while its mass remains constant. What is the ratio $K_{\\mathrm{new}}/K$?",
+    "context": "Identify what is held constant before scaling.",
+    "options": [
+      {
+        "id": "A",
+        "latex": "2",
+        "expression": "2",
+        "derived_expression": "2",
+        "unit": [0, 0, 0],
+        "slope": -0.7,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Linear scaling",
+          "why_plausible": "Momentum and kinetic energy both increase with motion.",
+          "first_wrong_pivot": "You assumed kinetic energy is linear in momentum.",
+          "counterfactual_valid_when": "A factor 2 is valid if momentum doubles and mass also doubles.",
+          "avoidance_rule": "Write the invariant relation before using a ratio.",
+          "recovery_check": {
+            "question": "At fixed mass, momentum triples. Find the kinetic-energy ratio.",
+            "answer": "9",
+            "expression": "9",
+            "target_expression": "9",
+            "explanation": "K scales with p², so the ratio is 9."
+          }
+        }
+      },
+      {
+        "id": "B",
+        "latex": "4",
+        "expression": "4",
+        "derived_expression": "2**2",
+        "unit": [0, 0, 0],
+        "slope": 1.2,
+        "intercept": 0.0,
+        "trap": null
+      },
+      {
+        "id": "C",
+        "latex": "\frac12",
+        "expression": "1/2",
+        "derived_expression": "1/2",
+        "unit": [0, 0, 0],
+        "slope": -0.2,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Inverse scaling",
+          "why_plausible": "The formula contains a denominator, inviting inversion.",
+          "first_wrong_pivot": "You placed the momentum scaling factor in the denominator.",
+          "counterfactual_valid_when": "A factor 1/2 is valid if mass doubles at fixed momentum.",
+          "avoidance_rule": "Separate numerator changes from denominator changes.",
+          "recovery_check": {
+            "question": "At fixed momentum, mass triples. Find the energy ratio.",
+            "answer": "1/3",
+            "expression": "1/3",
+            "target_expression": "1/3",
+            "explanation": "K=p²/(2m) gives a factor 1/3."
+          }
+        }
+      },
+      {
+        "id": "D",
+        "latex": "1",
+        "expression": "1",
+        "derived_expression": "2**2/4",
+        "unit": [0, 0, 0],
+        "slope": 0.5,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Conservation assumed",
+          "why_plausible": "The same particle can suggest unchanged energy.",
+          "first_wrong_pivot": "You assumed kinetic energy conservation although momentum changes externally.",
+          "counterfactual_valid_when": "A ratio 1 is valid if momentum doubles and mass quadruples.",
+          "avoidance_rule": "Do not assume conservation unless the interaction permits it.",
+          "recovery_check": {
+            "question": "Momentum doubles and mass quadruples. Find the energy ratio.",
+            "answer": "1",
+            "expression": "1",
+            "target_expression": "1",
+            "explanation": "The p² factor 4 cancels the mass factor 4."
+          }
+        }
+      }
+    ],
+    "correct_id": "B",
+    "answer_expression": "2**2",
+    "solution": "$K=p^2/(2m)$. At constant mass, doubling $p$ multiplies $K$ by $2^2=4$.",
+    "domain": {},
+    "expected_unit": [0, 0, 0],
+    "diagram_anchors": [],
+    "beta_seconds": 90,
+    "alpha": 1.0,
+    "a": 1.0,
+    "b": 0,
+    "c": 0.25,
+    "positive_marks": 4,
+    "negative_marks": 1,
+    "parameter_source": "illustrative"
+  },
+  {
+    "schema_version": "targetjee.item.v2",
+    "id": "main-ph",
+    "exam": "main",
+    "subject": "Chemistry",
+    "topic": "Logarithmic scales",
+    "prompt": "For a dilute solution at $25^\\circ C$, $[H^+]=10^{-3}\\,\\mathrm{mol\\,L^{-1}}$. Using concentration in place of activity, find its pH.",
+    "context": "Read the sign on the logarithmic definition.",
+    "options": [
+      {
+        "id": "A",
+        "latex": "-3",
+        "expression": "-3",
+        "derived_expression": "log(10**(-3))/log(10)",
+        "unit": [0, 0, 0],
+        "slope": -0.7,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Missing logarithm sign",
+          "why_plausible": "The concentration exponent is already visible.",
+          "first_wrong_pivot": "You used log[H⁺] instead of −log[H⁺].",
+          "counterfactual_valid_when": "−3 would be the formal concentration-based pH for [H⁺]=10³ M, outside the dilute approximation.",
+          "avoidance_rule": "Write the leading minus before reading the exponent.",
+          "recovery_check": {
+            "question": "If $[H^+]=10^{-4}$ M in a dilute solution, find pH.",
+            "answer": "4",
+            "expression": "4",
+            "target_expression": "4",
+            "explanation": "−log10(10⁻⁴)=4."
+          }
+        }
+      },
+      {
+        "id": "B",
+        "latex": "11",
+        "expression": "11",
+        "derived_expression": "14-3",
+        "unit": [0, 0, 0],
+        "slope": 0.35,
+        "intercept": 0.0,
+        "trap": {
+          "label": "pOH substituted",
+          "why_plausible": "The familiar relation pH+pOH=14 is recalled too early.",
+          "first_wrong_pivot": "You reported pOH=14−3 instead of pH.",
+          "counterfactual_valid_when": "11 is the pOH of this solution at 25 °C under the given approximation.",
+          "avoidance_rule": "Name the requested quantity before using the complement.",
+          "recovery_check": {
+            "question": "A dilute solution has pH 5 at $25^\\circ C$. Find pOH.",
+            "answer": "9",
+            "expression": "9",
+            "target_expression": "9",
+            "explanation": "pOH=14−5=9."
+          }
+        }
+      },
+      {
+        "id": "C",
+        "latex": "3",
+        "expression": "3",
+        "derived_expression": "-log(10**(-3))/log(10)",
+        "unit": [0, 0, 0],
+        "slope": 1.2,
+        "intercept": 0.0,
+        "trap": null
+      },
+      {
+        "id": "D",
+        "latex": "10^{-3}",
+        "expression": "1/1000",
+        "derived_expression": "10**(-3)",
+        "unit": [0, 0, 0],
+        "slope": 0.5,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Concentration not transformed",
+          "why_plausible": "The numeric concentration is explicitly supplied.",
+          "first_wrong_pivot": "You reported [H⁺] itself without applying the logarithm.",
+          "counterfactual_valid_when": "10⁻³ is the hydrogen-ion molarity, not its pH.",
+          "avoidance_rule": "A logarithmic index is not the underlying concentration.",
+          "recovery_check": {
+            "question": "Find pH when $[H^+]=10^{-2}$ M in a dilute solution.",
+            "answer": "2",
+            "expression": "2",
+            "target_expression": "2",
+            "explanation": "−log10(10⁻²)=2."
+          }
+        }
+      }
+    ],
+    "correct_id": "C",
+    "answer_expression": "-log(10**(-3))/log(10)",
+    "solution": "$\\mathrm{pH}=-\\log_{10}[H^+]=-\\log_{10}(10^{-3})=3$.",
+    "domain": {},
+    "expected_unit": [0, 0, 0],
+    "diagram_anchors": [],
+    "beta_seconds": 90,
+    "alpha": 1.0,
+    "a": 1.0,
+    "b": 0,
+    "c": 0.25,
+    "positive_marks": 4,
+    "negative_marks": 1,
+    "parameter_source": "illustrative"
+  },
+  {
+    "schema_version": "targetjee.item.v2",
+    "id": "adv-domain",
+    "exam": "advanced",
+    "subject": "Mathematics",
+    "topic": "Domain × equation solving",
+    "prompt": "How many real solutions satisfy $\\sqrt{x+2}=x$?",
+    "context": "Squaring preserves candidates, not necessarily solutions.",
+    "options": [
+      {
+        "id": "A",
+        "latex": "2",
+        "expression": "2",
+        "derived_expression": "2",
+        "unit": [0, 0, 0],
+        "slope": -0.7,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Extraneous root retained",
+          "why_plausible": "The squared equation is a clean quadratic with two roots.",
+          "first_wrong_pivot": "You counted x=−1 without testing the original nonnegative root equation.",
+          "counterfactual_valid_when": "Two roots are valid for x+2=x², or √(x+2)=|x|.",
+          "avoidance_rule": "After squaring, substitute every candidate into the original.",
+          "recovery_check": {
+            "question": "How many real solutions satisfy $\\sqrt{x+6}=x$?",
+            "answer": "1",
+            "expression": "1",
+            "target_expression": "1",
+            "explanation": "The candidates are 3 and −2; only 3 satisfies the original."
+          }
+        }
+      },
+      {
+        "id": "B",
+        "latex": "1",
+        "expression": "1",
+        "derived_expression": "1",
+        "unit": [0, 0, 0],
+        "slope": 1.2,
+        "intercept": 0.0,
+        "trap": null
+      },
+      {
+        "id": "C",
+        "latex": "0",
+        "expression": "0",
+        "derived_expression": "0",
+        "unit": [0, 0, 0],
+        "slope": -0.2,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Domain rejected entirely",
+          "why_plausible": "A radical and a variable on the other side may look incompatible.",
+          "first_wrong_pivot": "You rejected all candidates without checking x=2.",
+          "counterfactual_valid_when": "Zero solutions would hold for √(x+2)=−3.",
+          "avoidance_rule": "Use domain constraints to filter, not replace, substitution.",
+          "recovery_check": {
+            "question": "Does $x=2$ satisfy $\\sqrt{x+2}=x$? Enter 1 for yes, 0 for no.",
+            "answer": "1",
+            "expression": "1",
+            "target_expression": "1",
+            "explanation": "Both sides equal 2."
+          }
+        }
+      },
+      {
+        "id": "D",
+        "latex": "3",
+        "expression": "3",
+        "derived_expression": "3",
+        "unit": [0, 0, 0],
+        "slope": 0.5,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Domain boundary counted",
+          "why_plausible": "The endpoint x=−2 makes the radical especially simple.",
+          "first_wrong_pivot": "You counted a domain endpoint as a root without comparing the two sides.",
+          "counterfactual_valid_when": "Three real roots would require a different equation, such as x(x−1)(x+1)=0.",
+          "avoidance_rule": "A permitted input is not automatically a solution.",
+          "recovery_check": {
+            "question": "At $x=-2$, what is $\\sqrt{x+2}-x$?",
+            "answer": "2",
+            "expression": "2",
+            "target_expression": "2",
+            "explanation": "The difference is 0−(−2)=2, so the endpoint is not a solution."
+          }
+        }
+      }
+    ],
+    "correct_id": "B",
+    "answer_expression": "1",
+    "solution": "The right side requires $x\\ge0$. Squaring gives $(x-2)(x+1)=0$, but only $x=2$ survives substitution. There is one solution.",
+    "domain": {},
+    "expected_unit": [0, 0, 0],
+    "diagram_anchors": [],
+    "beta_seconds": 210,
+    "alpha": 1.0,
+    "a": 1.0,
+    "b": 0.6,
+    "c": 0.25,
+    "positive_marks": 4,
+    "negative_marks": 2,
+    "parameter_source": "illustrative"
+  },
+  {
+    "schema_version": "targetjee.item.v2",
+    "id": "adv-pendulum",
+    "exam": "advanced",
+    "subject": "Physics",
+    "topic": "Non-inertial frame × oscillation",
+    "prompt": "A small-angle pendulum of length $0.60\\,m$ is inside a lift accelerating upward at $5\\,m\\,s^{-2}$. With $g=10\\,m\\,s^{-2}$, find its period in seconds.",
+    "context": "A frame decision changes the restoring force.",
+    "options": [
+      {
+        "id": "A",
+        "latex": "2\\pi\\sqrt{0.06}",
+        "expression": "2*pi*sqrt(0.06)",
+        "derived_expression": "2*pi*sqrt((3/5)/10)",
+        "unit": [0, 0, 1],
+        "slope": -0.7,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Laboratory g retained",
+          "why_plausible": "The usual pendulum formula is immediately recognizable.",
+          "first_wrong_pivot": "You used g rather than g+a in the lift frame.",
+          "counterfactual_valid_when": "2π√0.06 is valid in a nonaccelerating lift.",
+          "avoidance_rule": "Resolve effective gravity before using an oscillation formula.",
+          "recovery_check": {
+            "question": "In an upward-accelerating lift with $g=10$, $a=6$, find effective gravity in $m/s^2$.",
+            "answer": "16",
+            "expression": "16",
+            "target_expression": "16",
+            "explanation": "The downward pseudo-acceleration adds: 10+6=16."
+          }
+        }
+      },
+      {
+        "id": "B",
+        "latex": "2\\pi\\sqrt{0.12}",
+        "expression": "2*pi*sqrt(0.12)",
+        "derived_expression": "2*pi*sqrt((3/5)/(10-5))",
+        "unit": [0, 0, 1],
+        "slope": 0.35,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Pseudo-force sign reversed",
+          "why_plausible": "Some lift formulas use g−a.",
+          "first_wrong_pivot": "You used downward-lift effective gravity for upward acceleration.",
+          "counterfactual_valid_when": "2π√0.12 is valid if acceleration is downward at 5 m/s².",
+          "avoidance_rule": "Pseudo-force opposes frame acceleration, not frame velocity.",
+          "recovery_check": {
+            "question": "In a downward-accelerating lift with $g=10$, $a=4$, find effective gravity.",
+            "answer": "6",
+            "expression": "6",
+            "target_expression": "6",
+            "explanation": "The effective downward acceleration is 10−4=6."
+          }
+        }
+      },
+      {
+        "id": "C",
+        "latex": "\frac{2\\pi}{5}",
+        "expression": "2*pi/5",
+        "derived_expression": "2*pi*sqrt((3/5)/(10+5))",
+        "unit": [0, 0, 1],
+        "slope": 1.2,
+        "intercept": 0.0,
+        "trap": null
+      },
+      {
+        "id": "D",
+        "latex": "\frac{\\pi}{5}",
+        "expression": "pi/5",
+        "derived_expression": "pi*sqrt((3/5)/(10+5))",
+        "unit": [0, 0, 1],
+        "slope": 0.5,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Half-cycle reported",
+          "why_plausible": "A swing between extreme and opposite extreme feels complete.",
+          "first_wrong_pivot": "You reported half the full oscillation period.",
+          "counterfactual_valid_when": "π/5 is the time between opposite extremes for this pendulum.",
+          "avoidance_rule": "A period returns to the same position AND direction.",
+          "recovery_check": {
+            "question": "If a period is $4\\,s$, how long is travel between opposite extremes?",
+            "answer": "2",
+            "expression": "2",
+            "target_expression": "2",
+            "explanation": "Opposite extremes are separated by half a period."
+          }
+        }
+      }
+    ],
+    "correct_id": "C",
+    "answer_expression": "2*pi*sqrt((3/5)/(10+5))",
+    "solution": "$g_{\\mathrm{eff}}=g+a=15\\,m/s^2$. Thus $T=2\\pi\\sqrt{0.60/15}=2\\pi/5\\,s$.",
+    "domain": {},
+    "expected_unit": [0, 0, 1],
+    "diagram_anchors": [],
+    "beta_seconds": 240,
+    "alpha": 1.0,
+    "a": 1.0,
+    "b": 0.8,
+    "c": 0.25,
+    "positive_marks": 4,
+    "negative_marks": 2,
+    "parameter_source": "illustrative"
+  },
+  {
+    "schema_version": "targetjee.item.v2",
+    "id": "adv-integral",
+    "exam": "advanced",
+    "subject": "Mathematics",
+    "topic": "Symmetry × absolute value",
+    "prompt": "Evaluate $\\int_{-1}^{1}|x|\\,dx$.",
+    "context": "Check symmetry after, not before, applying the modulus.",
+    "options": [
+      {
+        "id": "A",
+        "latex": "0",
+        "expression": "0",
+        "derived_expression": "0",
+        "unit": [0, 0, 0],
+        "slope": -0.7,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Odd symmetry imported",
+          "why_plausible": "The interval is symmetric and the inner x is odd.",
+          "first_wrong_pivot": "You classified |x| as odd by ignoring the modulus.",
+          "counterfactual_valid_when": "Zero is valid for ∫ from −1 to 1 of x dx without modulus.",
+          "avoidance_rule": "Determine symmetry for the complete integrand.",
+          "recovery_check": {
+            "question": "Evaluate $\\int_{-2}^{2}|x|\\,dx$.",
+            "answer": "4",
+            "expression": "4",
+            "target_expression": "4",
+            "explanation": "Two triangles each have area 2, totalling 4."
+          }
+        }
+      },
+      {
+        "id": "B",
+        "latex": "1",
+        "expression": "1",
+        "derived_expression": "2*(1**2/2)",
+        "unit": [0, 0, 0],
+        "slope": 1.2,
+        "intercept": 0.0,
+        "trap": null
+      },
+      {
+        "id": "C",
+        "latex": "2",
+        "expression": "2",
+        "derived_expression": "2*1",
+        "unit": [0, 0, 0],
+        "slope": -0.2,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Rectangle instead of area",
+          "why_plausible": "The width is 2 and the maximum height is 1.",
+          "first_wrong_pivot": "You used a bounding rectangle rather than the triangular area.",
+          "counterfactual_valid_when": "2 is valid for ∫ from −1 to 1 of 1 dx.",
+          "avoidance_rule": "A varying integrand needs area under its curve, not max height × width.",
+          "recovery_check": {
+            "question": "Evaluate $\\int_0^2 x\\,dx$.",
+            "answer": "2",
+            "expression": "2",
+            "target_expression": "2",
+            "explanation": "The area is ½·2·2=2."
+          }
+        }
+      },
+      {
+        "id": "D",
+        "latex": "-1",
+        "expression": "-1",
+        "derived_expression": "-2*(1/2)",
+        "unit": [0, 0, 0],
+        "slope": 0.5,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Negative half sign carried",
+          "why_plausible": "x is negative on half the interval.",
+          "first_wrong_pivot": "You kept a negative sign even though the modulus makes both halves nonnegative.",
+          "counterfactual_valid_when": "−1 is valid for the integral of −|x| on this interval.",
+          "avoidance_rule": "Nonnegative integrands on forward limits cannot give negative area.",
+          "recovery_check": {
+            "question": "Evaluate $\\int_{-1}^{0}|x|\\,dx$.",
+            "answer": "1/2",
+            "expression": "1/2",
+            "target_expression": "1/2",
+            "explanation": "The left triangle has positive area ½."
+          }
+        }
+      }
+    ],
+    "correct_id": "B",
+    "answer_expression": "2*(1/2)",
+    "solution": "$|x|$ is even, so the integral is $2\\int_0^1 x\\,dx=2(1/2)=1$.",
+    "domain": {},
+    "expected_unit": [0, 0, 0],
+    "diagram_anchors": [],
+    "beta_seconds": 180,
+    "alpha": 1.0,
+    "a": 1.0,
+    "b": 0.5,
+    "c": 0.25,
+    "positive_marks": 4,
+    "negative_marks": 2,
+    "parameter_source": "illustrative"
+  },
+  {
+    "schema_version": "targetjee.item.v2",
+    "id": "adv-cell",
+    "exam": "advanced",
+    "subject": "Chemistry",
+    "topic": "Electrochemistry × spontaneity",
+    "prompt": "A cell has $E^\\circ=0.50\\,V$ and transfers $n=2$ electrons. Take $F=96500\\,C\\,mol^{-1}$. Find $\\Delta G^\\circ$ in $kJ\\,mol^{-1}$.",
+    "context": "Check the electron count, sign and unit conversion.",
+    "options": [
+      {
+        "id": "A",
+        "latex": "96.5",
+        "expression": "96.5",
+        "derived_expression": "(2*96500*(1/2))/1000",
+        "unit": [1, 2, -2],
+        "slope": -0.7,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Spontaneity sign flipped",
+          "why_plausible": "Positive voltage can be confused with positive free energy.",
+          "first_wrong_pivot": "You dropped the minus in ΔG°=−nFE°.",
+          "counterfactual_valid_when": "+96.5 kJ/mol is valid for the reverse cell with E°=−0.50 V.",
+          "avoidance_rule": "Positive cell voltage means negative reaction free energy.",
+          "recovery_check": {
+            "question": "With $n=1$, $F=100000$, $E^\\circ=1$, find $\\Delta G^\\circ$ in kJ/mol.",
+            "answer": "−100",
+            "expression": "-100",
+            "target_expression": "-100",
+            "explanation": "−1·100000·1 J/mol = −100 kJ/mol."
+          }
+        }
+      },
+      {
+        "id": "B",
+        "latex": "-48.25",
+        "expression": "-48.25",
+        "derived_expression": "-(96500*(1/2))/1000",
+        "unit": [1, 2, -2],
+        "slope": 0.35,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Electron count omitted",
+          "why_plausible": "One mole of reaction is mistaken for one mole of electrons.",
+          "first_wrong_pivot": "You used −FE° without the stoichiometric factor n.",
+          "counterfactual_valid_when": "−48.25 kJ/mol is valid for a one-electron reaction at the same voltage.",
+          "avoidance_rule": "Balance the cell reaction before reading n.",
+          "recovery_check": {
+            "question": "For $n=2$, $F=100000$, $E^\\circ=1$, find $\\Delta G^\\circ$ in kJ/mol.",
+            "answer": "−200",
+            "expression": "-200",
+            "target_expression": "-200",
+            "explanation": "The two-electron reaction gives −200 kJ/mol."
+          }
+        }
+      },
+      {
+        "id": "C",
+        "latex": "-96.5",
+        "expression": "-96.5",
+        "derived_expression": "-(2*96500*(1/2))/1000",
+        "unit": [1, 2, -2],
+        "slope": 1.2,
+        "intercept": 0.0,
+        "trap": null
+      },
+      {
+        "id": "D",
+        "latex": "-96500",
+        "expression": "-96500",
+        "derived_expression": "-(2*96500*(1/2))",
+        "unit": [1, 2, -2],
+        "slope": 0.5,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Joule-to-kilojoule conversion",
+          "why_plausible": "The product gives a memorable large integer.",
+          "first_wrong_pivot": "You labelled a joule value as kilojoules.",
+          "counterfactual_valid_when": "−96500 is correct in J/mol, not kJ/mol.",
+          "avoidance_rule": "Convert the final energy to the requested unit once.",
+          "recovery_check": {
+            "question": "Convert $-50000\\,J/mol$ to kJ/mol.",
+            "answer": "−50",
+            "expression": "-50",
+            "target_expression": "-50",
+            "explanation": "Divide by 1000: −50 kJ/mol."
+          }
+        }
+      }
+    ],
+    "correct_id": "C",
+    "answer_expression": "-(2*96500*(1/2))/1000",
+    "solution": "$\\Delta G^\\circ=-nFE^\\circ=-96500\\,J/mol=-96.5\\,kJ/mol$.",
+    "domain": {},
+    "expected_unit": [1, 2, -2],
+    "diagram_anchors": [],
+    "beta_seconds": 210,
+    "alpha": 1.0,
+    "a": 1.0,
+    "b": 0.6,
+    "c": 0.25,
+    "positive_marks": 4,
+    "negative_marks": 2,
+    "parameter_source": "illustrative"
+  },
+  {
+    "schema_version": "targetjee.item.v2",
+    "id": "adv-collision",
+    "exam": "advanced",
+    "subject": "Physics",
+    "topic": "Momentum × energy",
+    "prompt": "Two identical masses move toward each other with speeds $v$ and $2v$ on a frictionless line. They stick. What fraction of their initial kinetic energy is lost?",
+    "context": "Choose signed velocities; sticking is not elastic.",
+    "options": [
+      {
+        "id": "A",
+        "latex": "\frac1{10}",
+        "expression": "1/10",
+        "derived_expression": "2*((1-2)/2)**2/(1**2+2**2)",
+        "unit": [0, 0, 0],
+        "slope": -0.7,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Retained energy reported",
+          "why_plausible": "The final-to-initial ratio is a natural endpoint of the derivation.",
+          "first_wrong_pivot": "You returned Kf/Ki instead of 1−Kf/Ki.",
+          "counterfactual_valid_when": "1/10 is the retained fraction for this collision.",
+          "avoidance_rule": "Underline whether the question asks retained or lost.",
+          "recovery_check": {
+            "question": "If the retained energy fraction is $1/4$, what fraction is lost?",
+            "answer": "3/4",
+            "expression": "3/4",
+            "target_expression": "3/4",
+            "explanation": "Lost fraction = 1−1/4=3/4."
+          }
+        }
+      },
+      {
+        "id": "B",
+        "latex": "\frac9{10}",
+        "expression": "9/10",
+        "derived_expression": "1-2*((1-2)/2)**2/(1**2+2**2)",
+        "unit": [0, 0, 0],
+        "slope": 1.2,
+        "intercept": 0.0,
+        "trap": null
+      },
+      {
+        "id": "C",
+        "latex": "\frac12",
+        "expression": "1/2",
+        "derived_expression": "1/2",
+        "unit": [0, 0, 0],
+        "slope": -0.2,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Stationary-target formula imported",
+          "why_plausible": "Identical masses sticking suggests a familiar 50% energy-loss rule.",
+          "first_wrong_pivot": "You applied the one-stationary-mass formula although both initial velocities are nonzero.",
+          "counterfactual_valid_when": "A loss fraction 1/2 holds for identical masses with one initially at rest that stick.",
+          "avoidance_rule": "A special-case collision formula needs its initial-velocity conditions.",
+          "recovery_check": {
+            "question": "Masses $m,m$ have velocities $+3,-1$ and stick. Find the signed final velocity.",
+            "answer": "1",
+            "expression": "1",
+            "target_expression": "1",
+            "explanation": "V=(3−1)/2=+1."
+          }
+        }
+      },
+      {
+        "id": "D",
+        "latex": "0",
+        "expression": "0",
+        "derived_expression": "0",
+        "unit": [0, 0, 0],
+        "slope": 0.5,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Elastic conservation imported",
+          "why_plausible": "No friction suggests no energy loss.",
+          "first_wrong_pivot": "You conserved kinetic energy despite the explicitly inelastic sticking.",
+          "counterfactual_valid_when": "Zero loss is valid for an elastic collision, not this sticking event.",
+          "avoidance_rule": "Momentum can be conserved while kinetic energy becomes internal energy.",
+          "recovery_check": {
+            "question": "In a sticking collision, is total momentum conserved if external impulse is zero? Enter 1 for yes.",
+            "answer": "1",
+            "expression": "1",
+            "target_expression": "1",
+            "explanation": "Zero external impulse conserves total momentum."
+          }
+        }
+      }
+    ],
+    "correct_id": "B",
+    "answer_expression": "1-2*((1-2)/2)**2/(1**2+2**2)",
+    "solution": "Take velocities $+v,-2v$. Momentum gives $V=-v/2$. Initial energy is $5mv^2/2$; final energy is $mv^2/4$. Retained fraction is $1/10$, so loss is $9/10$.",
+    "domain": {},
+    "expected_unit": [0, 0, 0],
+    "diagram_anchors": [],
+    "beta_seconds": 270,
+    "alpha": 1.0,
+    "a": 1.0,
+    "b": 0.9,
+    "c": 0.25,
+    "positive_marks": 4,
+    "negative_marks": 2,
+    "parameter_source": "illustrative"
+  },
+  {
+    "schema_version": "targetjee.item.v2",
+    "id": "adv-log",
+    "exam": "advanced",
+    "subject": "Mathematics",
+    "topic": "Logarithms × domain",
+    "prompt": "How many real values solve $\\log_2(x-1)+\\log_2(x+1)=3$?",
+    "context": "A logarithmic identity does not remove the original domain.",
+    "options": [
+      {
+        "id": "A",
+        "latex": "2",
+        "expression": "2",
+        "derived_expression": "2",
+        "unit": [0, 0, 0],
+        "slope": -0.7,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Log-domain loss",
+          "why_plausible": "Combining logs turns the expression into a simple quadratic.",
+          "first_wrong_pivot": "You accepted −3 even though the original log arguments are negative.",
+          "counterfactual_valid_when": "Two real roots are valid for x²−1=8 alone.",
+          "avoidance_rule": "Carry the original log domain beside each algebraic step.",
+          "recovery_check": {
+            "question": "How many real roots solve $\\log_2(x-1)+\\log_2(x+1)=\\log_2 15$?",
+            "answer": "1",
+            "expression": "1",
+            "target_expression": "1",
+            "explanation": "Candidates ±4 arise; only +4 satisfies x>1."
+          }
+        }
+      },
+      {
+        "id": "B",
+        "latex": "0",
+        "expression": "0",
+        "derived_expression": "0",
+        "unit": [0, 0, 0],
+        "slope": 0.35,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Valid root discarded",
+          "why_plausible": "The presence of x−1 can suggest an overly strict restriction.",
+          "first_wrong_pivot": "You rejected x=3 without testing positive log arguments.",
+          "counterfactual_valid_when": "Zero roots would be valid for log₂(x−1)+log₂(x+1) with the extra constraint x<0.",
+          "avoidance_rule": "Test a candidate against the actual domain, not a remembered rule.",
+          "recovery_check": {
+            "question": "Is $x=3$ in the domain of $\\log_2(x-1)$? Enter 1 for yes.",
+            "answer": "1",
+            "expression": "1",
+            "target_expression": "1",
+            "explanation": "The argument is 2>0."
+          }
+        }
+      },
+      {
+        "id": "C",
+        "latex": "1",
+        "expression": "1",
+        "derived_expression": "1",
+        "unit": [0, 0, 0],
+        "slope": 1.2,
+        "intercept": 0.0,
+        "trap": null
+      },
+      {
+        "id": "D",
+        "latex": "3",
+        "expression": "3",
+        "derived_expression": "3",
+        "unit": [0, 0, 0],
+        "slope": 0.5,
+        "intercept": 0.0,
+        "trap": {
+          "label": "Exponent counted as roots",
+          "why_plausible": "The right side is the integer 3.",
+          "first_wrong_pivot": "You interpreted the logarithm value as the number of solutions.",
+          "counterfactual_valid_when": "Three roots would require a different equation, for example (x−2)(x−3)(x−4)=0.",
+          "avoidance_rule": "A function value is not a root count.",
+          "recovery_check": {
+            "question": "If $\\log_2 y=3$, find $y$.",
+            "answer": "8",
+            "expression": "8",
+            "target_expression": "8",
+            "explanation": "Exponentiation gives y=2³=8."
+          }
+        }
+      }
+    ],
+    "correct_id": "C",
+    "answer_expression": "1",
+    "solution": "The original domain is $x>1$. Combining logs gives $x^2-1=8$, so $x=\\pm3$. Only $x=3$ lies in the domain: one solution.",
+    "domain": {},
+    "expected_unit": [0, 0, 0],
+    "diagram_anchors": [],
+    "beta_seconds": 240,
+    "alpha": 1.0,
+    "a": 1.0,
+    "b": 0.8,
+    "c": 0.25,
+    "positive_marks": 4,
+    "negative_marks": 2,
+    "parameter_source": "illustrative"
+  }
+]

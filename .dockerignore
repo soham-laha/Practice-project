@@ -1,0 +1,11 @@
+# The backend image needs only application code, pinned requirements and seeds.
+**
+!backend/
+!backend/**
+!data/
+!data/seed-items.json
+backend/tests/
+**/__pycache__/
+**/*.pyc
+**/.env
+**/.env.*
