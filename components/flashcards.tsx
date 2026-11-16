@@ -70,11 +70,10 @@ export function Flashcards() {
     <>
       <div className="page-title split-heading">
         <div>
-          <span className="eyebrow">A LITTLE RECALL. A LONGER MEMORY.</span>
           <h1>
             Keep the lesson.
             <br />
-            <em>Leave the mistake behind.</em>
+            Leave the mistake behind.
           </h1>
           <p>
             Flashcards are made automatically from the traps you selected. Reveal the guardrail,
@@ -107,10 +106,10 @@ export function Flashcards() {
         <div className="flashcard-grid">
           {cards.map((c) => (
             <article className="revision-card card" key={c.id}>
-              <span className="eyebrow">
-                {c.item.subject.toUpperCase()} · {c.item.topic.toUpperCase()}
-              </span>
               <h2>{c.trap.label}</h2>
+              <p className="context-label">
+                {c.item.subject}: {c.item.topic}
+              </p>
               <p>
                 <MathText text={c.trap.recovery_check.question} />
               </p>
@@ -151,10 +150,10 @@ export function Flashcards() {
                   Reveal the thinking <ArrowRight size={13} />
                 </button>
               )}
-              <span className="tiny-text" style={{ fontSize: 8, marginTop: 12 }}>
+              <span className="tiny-text" style={{ fontSize: 12, marginTop: 12 }}>
                 {c.repair
-                  ? `Box ${c.repair.box}/5 · Next: ${new Date(c.repair.dueAt).toLocaleDateString('en', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
-                  : 'New card · ready to recall'}
+                  ? `Box ${c.repair.box}/5. Next: ${new Date(c.repair.dueAt).toLocaleDateString('en', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
+                  : 'New card, ready to recall'}
               </span>
             </article>
           ))}

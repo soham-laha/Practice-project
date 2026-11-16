@@ -79,3 +79,16 @@ describe('local persistence failover', () => {
     await expect(loadLearner()).rejects.toThrow();
   });
 });
+
+it('removes the optional model cache as part of a full local reset', async () => {
+  const url =
+    'https://huggingface.co/mlc-ai/SmolLM2-360M-Instruct-q4f32_1-MLC/resolve/main/params_shard_0.bin';
+  const remove = vi.fn().mockResolvedValue(true);
+  vi.stubGlobal('caches', {
+    keys: async () => ['webllm/model'],
+    open: async () => ({ keys: async () => [{ url }], delete: remove }),
+  });
+  await resetLocalData();
+  expect(remove).toHaveBeenCalledOnce();
+  expect(db.clear).toHaveBeenCalledWith('state');
+});

@@ -67,6 +67,34 @@
       "noticeFiles": ["img--sharp-wasm32-0.35.5-LICENSE.txt"]
     },
     {
+      "name": "@mlc-ai/web-llm",
+      "version": "0.2.88",
+      "declaredLicense": "Apache-2.0",
+      "repository": "git+https://github.com/mlc-ai/web-llm",
+      "noticeFiles": ["mlc-ai--web-llm-0.2.88-LICENSE.txt"]
+    },
+    {
+      "name": "@mlc-ai/web-runtime",
+      "version": "0.28.0-dev2",
+      "declaredLicense": "Apache-2.0",
+      "repository": "git+https://github.com/apache/tvm/tree/main/web",
+      "noticeFiles": []
+    },
+    {
+      "name": "@mlc-ai/web-tokenizers",
+      "version": "0.1.6",
+      "declaredLicense": "Apache-2.0",
+      "repository": "git+https://github.com/mlc-ai/tokenizers-cpp",
+      "noticeFiles": []
+    },
+    {
+      "name": "@mlc-ai/web-xgrammar",
+      "version": "0.1.27",
+      "declaredLicense": "Apache-2.0",
+      "repository": "git+https://github.com/mlc-ai/xgrammar",
+      "noticeFiles": []
+    },
+    {
       "name": "@next/env",
       "version": "16.4.6",
       "declaredLicense": "MIT",
@@ -102,6 +130,41 @@
       "noticeFiles": ["swc--helpers-0.5.23-LICENSE.txt"]
     },
     {
+      "name": "@types/chrome",
+      "version": "0.0.266",
+      "declaredLicense": "MIT",
+      "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+      "noticeFiles": ["types--chrome-0.0.266-LICENSE.txt"]
+    },
+    {
+      "name": "@types/filesystem",
+      "version": "0.0.36",
+      "declaredLicense": "MIT",
+      "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+      "noticeFiles": ["types--filesystem-0.0.36-LICENSE.txt"]
+    },
+    {
+      "name": "@types/filewriter",
+      "version": "0.0.33",
+      "declaredLicense": "MIT",
+      "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+      "noticeFiles": ["types--filewriter-0.0.33-LICENSE.txt"]
+    },
+    {
+      "name": "@types/har-format",
+      "version": "1.2.16",
+      "declaredLicense": "MIT",
+      "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+      "noticeFiles": ["types--har-format-1.2.16-LICENSE.txt"]
+    },
+    {
+      "name": "@webgpu/types",
+      "version": "0.1.74",
+      "declaredLicense": "BSD-3-Clause",
+      "repository": "git+https://github.com/gpuweb/types.git",
+      "noticeFiles": ["webgpu--types-0.1.74-LICENSE.txt"]
+    },
+    {
       "name": "baseline-browser-mapping",
       "version": "2.11.37",
       "declaredLicense": "Apache-2.0",
@@ -119,7 +182,7 @@
       "name": "client-only",
       "version": "0.0.1",
       "declaredLicense": "MIT",
-      "repository": null,
+      "repository": "",
       "noticeFiles": []
     },
     {
@@ -149,6 +212,13 @@
       "declaredLicense": "MIT",
       "repository": "https://github.com/KaTeX/KaTeX.git",
       "noticeFiles": ["katex-0.19.1-LICENSE.txt"]
+    },
+    {
+      "name": "loglevel",
+      "version": "1.9.2",
+      "declaredLicense": "MIT",
+      "repository": "git://github.com/pimterry/loglevel.git",
+      "noticeFiles": ["loglevel-1.9.2-LICENSE-MIT.txt"]
     },
     {
       "name": "lucide-react",

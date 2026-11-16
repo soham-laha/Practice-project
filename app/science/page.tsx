@@ -5,21 +5,21 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = { title: 'The science behind it' };
 const models = [
   {
-    title: '01 · Conceptual evidence, not just a raw score',
+    title: '1. Conceptual evidence, not just a raw score',
     formula: String.raw`P_i(\theta)=c_i+\frac{1-c_i}{1+\exp[-1.702\,a_i(\theta-b_i)]}`,
     text: 'Birnbaum’s three-parameter logistic model accounts for item difficulty b, discrimination a and a guessing floor c. A coarse global search followed by bounded finite-difference Newton–Raphson maximizes likelihood on −3 ≤ θ ≤ 3. Unanswered items count as incorrect in this estimate but remain zero marks in the actual score. Conditional uncertainty is estimated from expected item information.',
     caution:
       'A four-option guess floor is 0.25 in our reference items. We do not suppress it simply because a distractor looks clever. An uncalibrated short drill cannot establish “true mastery.”',
   },
   {
-    title: '02 · Notice the wrong turn, not just the wrong answer',
+    title: '2. Notice the wrong turn, not just the wrong answer',
     formula: String.raw`P_{ik}(\theta)=\frac{\exp(a_{ik}\theta+c_{ik})}{\sum_{h=1}^{4}\exp(a_{ih}\theta+c_{ih})}`,
     text: 'Bock’s nominal response model assigns an attractiveness slope and intercept to each option. A stable softmax (subtracting the largest logit) prevents overflow. Deep analysis exposes these illustrative probabilities; the authored trap trace supplies the practical guardrail.',
     caution:
       'A positive-slope distractor is not proof that you are an “elite student,” nor that we know your intentions. Parameters need real response data before individual diagnostic claims are valid.',
   },
   {
-    title: '03 · Pace, weighted by how informative the item is',
+    title: '3. Pace, weighted by how informative the item is',
     formula: String.raw`\ln T_i\sim\mathcal N(\beta_i-\tau,\alpha_i^{-2})`,
     second: String.raw`\hat\tau=\frac{\sum_i\alpha_i^2(\beta_i-\ln T_i)}{\sum_i\alpha_i^2},\quad \mathrm{SE}(\hat\tau)=\frac1{\sqrt{\sum_i\alpha_i^2}}`,
     text: 'Van der Linden’s log-normal response-time model uses βᵢ = ln(benchmark seconds). Alpha is time precision: its square is the weight. Positive τ means faster than this item set’s benchmark. Only positive-time answered items enter this calculation.',
@@ -27,14 +27,14 @@ const models = [
       'The conditional SE assumes known item parameters. It does not include uncertainty in our illustrative benchmark calibration, device conditions, reading time or breaks.',
   },
   {
-    title: '04 · Keep grace visible, without taking marks away',
+    title: '4. Keep grace visible, without taking marks away',
     formula: String.raw`\theta^*(t,g)=\theta-\lambda\max\!\left(0,\frac{\beta_{s}}t-1\right)-0.22\ln\!\left(1+\frac g{\beta_s}\right)`,
     text: 'A transparent speed–accuracy heuristic separates haste from additional time. Here βₛ is benchmark seconds, λ = 0.15, and g is granted grace seconds. Each extension is an append-only local TimeDeficitEvent. The exact formula is not clipped, so adjusted values may fall outside the base ability interval.',
     caution:
       'This pressure adjustment is a product heuristic supplied in the architecture brief, not a universally validated psychometric law. It never changes actual +4/−1 or +4/−2 exam marks.',
   },
   {
-    title: '05 · Compare confidence with evidence, only when you report it',
+    title: '5. Compare confidence with evidence, only when you report it',
     formula: String.raw`\mathrm{Brier}=\frac1N\sum_{n=1}^{N}(f_n-o_n)^2`,
     second: String.raw`\mathrm{ECE}=\sum_{m=1}^{5}\frac{|B_m|}{N}\,|\mathrm{acc}(B_m)-\mathrm{conf}(B_m)|`,
     text: 'Brier score and five equal-width confidence bins measure the difference between your explicit certainty tag and binary correctness. Guess = 0.25, Think so = 0.65, Certain = 0.95. Untagged and unanswered responses are omitted; a confidence of exactly 1 belongs to the final bin.',
@@ -46,14 +46,10 @@ export default function Science() {
   return (
     <div className="science-content">
       <div className="page-title">
-        <span className="eyebrow">
-          <FlaskConical size={14} />
-          TRANSPARENT BY DESIGN
-        </span>
         <h1>
           Thoughtful engineering.
           <br />
-          <em>Honest about the limits.</em>
+          Honest about the limits.
         </h1>
         <p>
           Five mathematical tools help organize your evidence. They don’t read minds, predict ranks,
@@ -75,30 +71,30 @@ export default function Science() {
               target="_blank"
               rel="noreferrer"
             >
-              Tractinsky, Katz & Ikar (2000) — aesthetics and perceived usability.
+              Tractinsky, Katz & Ikar (2000), aesthetics and perceived usability.
             </a>
           </li>
           <li>
             <a href="https://doi.org/10.1086/500480" target="_blank" rel="noreferrer">
-              Nunes & Drèze (2006) — endowed progress and persistence.
+              Nunes & Drèze (2006), endowed progress and persistence.
             </a>{' '}
-            Our first completed step means your practice space is genuinely ready, not that mastery
-            has been awarded.
+            The practice ledger counts completed drills, checked repairs and card recalls. Opening
+            the workspace does not award a completed practice milestone.
           </li>
           <li>
             <a href="https://doi.org/10.1037/a0024192" target="_blank" rel="noreferrer">
-              Masicampo & Baumeister (2011) — plans for unfinished goals.
+              Masicampo & Baumeister (2011), plans for unfinished goals.
             </a>
           </li>
           <li>
             <a href="https://doi.org/10.1177/0018720813515509" target="_blank" rel="noreferrer">
-              Piepenbrock, Mayr & Buchner (2014) — display polarity and small-character legibility.
+              Piepenbrock, Mayr & Buchner (2014), display polarity and small-character legibility.
             </a>{' '}
             Theme choice and measured contrast matter more than claims about a magical hue.
           </li>
           <li>
             <a href="https://doi.org/10.1037/0033-2909.125.6.627" target="_blank" rel="noreferrer">
-              Deci, Koestner & Ryan (1999) — rewards and intrinsic motivation.
+              Deci, Koestner & Ryan (1999), rewards and intrinsic motivation.
             </a>{' '}
             Feedback acknowledges reasoning, not points or random loot.
           </li>

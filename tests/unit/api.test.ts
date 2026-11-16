@@ -136,3 +136,40 @@ describe('secure runtime file transport', () => {
     expect(transport).toHaveBeenCalledOnce();
   });
 });
+
+describe('safe generation receipts and keyless API check', () => {
+  it('retains only allowlisted diagnostic fields, not exception text or extra input', async () => {
+    const { ApiError, diagnosticReceipt } = await import('@/lib/api');
+    const error = new ApiError(KEY, 422, {
+      code: 'item_contract',
+      stage: 'format',
+      request_id: '123456abcdef',
+      revision: '1234abcd',
+      secret: KEY,
+    });
+    expect(error.diagnostic).toEqual({
+      code: 'item_contract',
+      stage: 'format',
+      request_id: '123456abcdef',
+      revision: '1234abcd',
+    });
+    expect(diagnosticReceipt(error, KEY)).not.toContain(KEY);
+    expect(diagnosticReceipt(error, 'gemini-flash-latest')).toContain('item_contract');
+    expect(new ApiError('safe', 422, { code: KEY }).diagnostic).toBeUndefined();
+  });
+  it('checks health without reading or sending a key, and accepts older builds without a revision', async () => {
+    const { checkEngine } = await import('@/lib/api');
+    const read = vi.fn(() => {
+      throw new Error(KEY);
+    });
+    vi.stubGlobal('localStorage', { getItem: read });
+    const fetch = vi
+      .fn()
+      .mockResolvedValue(Response.json({ status: 'ok', schema: 'targetjee.item.v2' }));
+    vi.stubGlobal('fetch', fetch);
+    expect(await checkEngine()).toContain('older API build');
+    expect(read).not.toHaveBeenCalled();
+    expect(fetch.mock.calls[0][0]).toBe('/api/engine/health');
+    expect(JSON.stringify(fetch.mock.calls)).not.toContain(KEY);
+  });
+});

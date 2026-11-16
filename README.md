@@ -4,13 +4,13 @@
 
 Turn a textbook problem into a timed, four-option drill. Understand why a wrong answer looked right, find the first invalid pivot, test a counterfactual, and close the loop with a 45-second recovery check. Or start with the complete built-in reference experience—no account, API key or running AI service needed.
 
-> **Review status:** the final repository audit found and patched upload-dependency, Gemini-contract/error, saved-key wording, local-reset and form-contrast issues. [Findings, fresh verification and open items](docs/FINAL_REVIEW.md) are recorded separately from the older deployed evidence. **These application fixes still need review/merge and deployment; successful real-key Gemini forging/coaching remains unverified.** Hallmark is installed globally and in this workspace; [its design audit and remaining polish work](docs/DESIGN_TOOLING.md) are documented, not represented as a completed redesign.
+> **Working-branch status:** the requested workbook redesign, safe staged Gemini diagnostics, provider-schema/server-browser generation-contract repairs and an optional on-device text assistant are implemented. [Current changes, verification and limits](docs/WORKBOOK_REDESIGN.md) are separate from the [earlier repository review](docs/FINAL_REVIEW.md) and historical deployed evidence. **This task has not deployed the changes, confirmed live Gemini success or run real model inference.** The rendered Hallmark audit still reports two KaTeX/MathML heuristic flags; it is not presented as an unconditional pass.
 >
-> **Deployed baseline:** the dedicated Vercel frontend and stateless Render API are connected. Use **About → Website** for the public site; its URL is intentionally not duplicated here. The earlier 16-case public run and both six-item validation batches passed on the older deployed revisions. PRs #1–#5 are merged; a green historical/keyless check does not clear the reported live-generation failures. The older TargetJEE product remains untouched.
+> **Deployed baseline:** the dedicated frontend and stateless API were connected at the last recorded check. Use **About → Website** for the public site; its URL is intentionally not duplicated here. PRs #1–#6 are merged, but production was still on older revisions at the start of this task. Historical public/keyless checks do not clear the reported generation failures or prove this branch is deployed. The older TargetJEE product remains untouched.
 
 ## What’s included
 
-- Carefully designed warm-paper / forest workspace with self-hosted **Manrope + Newsreader**, tactile cards and restrained glass surfaces. No prohibited blue-green palette families.
+- Warm-paper / forest workbook with self-hosted **Manrope + Newsreader**, ruled task sections, readable annotations and a real problem interaction instead of a promotional feature-card grid. No prohibited blue-green palette families.
 - Light / Dark / AAA-palette High Contrast themes, persisted locally, reduced-motion support and explicit mobile/tablet/laptop/desktop breakpoints.
 - Interactive five-second trap preview and lazy procedural Three.js orbital illustration.
 - **12 authored reference items**: six per exam mode across Physics, Chemistry and Mathematics, complete with distractor traces and symbolic calculation certificates.
@@ -19,13 +19,15 @@ Turn a textbook problem into a timed, four-option drill. Understand why a wrong 
 - Actual score vs. recoverable marks; activity/subject views; honest provisional estimate labels; three review depths; first-pivot replay; interactive redemption checks; answer-change observations and optional learner confirmation.
 - Automatic local revision cards with transparent recall scheduling.
 - Local-only history/repairs in IndexedDB, namespaced preferences in localStorage, deep-validated JSON import/export and confirmed reset. No login, learner database, advertising or analytics.
-- Text/PNG/JPEG/PDF forge, Gemini Flash / Flash Lite selection, request-scoped BYOK headers, size/MIME/signature validation and a bounded SymPy guardrail.
+- Text/PNG/JPEG/PDF forge, Gemini Flash / Flash Lite selection, exam-specific supported-keyword structured output, request-scoped BYOK headers, size/MIME/signature validation and a bounded SymPy guardrail. See [contract repairs and live-acceptance limits](docs/GEMINI_TROUBLESHOOTING.md).
 - BYOK study coach with tailored post-drill suggestions, practice questions and conversational follow-ups. Full reference flow remains available without AI.
+- Optional **SmolLM2 360M, 4-bit** on-device text assistant with explicit download consent, WebGPU checks, bounded single-turn suggestions, Stop/Unload/Remove and no cloud fallback. It is experimental, not a local image/PDF or verified-drill replacement.
+- Keyless API connection check and safe failure receipts distinguishing provider, generated-format and algebra-verification failures without blaming every error on quota.
 - Mirrored TypeScript/Python implementations of **3PL MLE, NRM, precision-weighted log-time speed, SATO with grace adjustment, Brier score and five-bin ECE**, with unit tests.
 
 ## Run locally
 
-Prerequisites: Node **22.12+**, npm and Python **3.12** (the Docker/CI target). The sandbox uses Python 3.11.2 because standalone 3.12 downloads were blocked. The corrected workflow has now passed all installation, static/build, unit, design, browser and local HTTP gates on GitHub with Node 22 and 26 and Python 3.12. The original failure was a HEAD-versus-GET readiness mismatch, not a broken API startup. No Gemini key is needed for the reference simulator/review/cards.
+Prerequisites: Node **22.12+**, npm and Python **3.12** (the Docker/CI target). This sandbox uses Node 22.22.3 and Python 3.11.2. The earlier merged base passed Node 22/26 and Python 3.12 CI; this branch's fresh local results are recorded in the [current review](docs/WORKBOOK_REDESIGN.md), not inferred from those historical runs. No Gemini key or model download is needed for the reference simulator/review/cards.
 
 ```bash
 npm ci
@@ -91,6 +93,14 @@ Saving a key checks its **format only**. “Key saved” does not mean Google ac
 
 The dashboard coach automatically sends the selected completed drill’s compact evidence summary when a saved key is available; follow-ups send recent conversation context. Source scans are sent only when you click Forge. The provider sees these requests and its quotas, terms and billing apply. A free-tier key is not a guarantee of unrestricted or perpetual free use. Never enter a server-wide Gemini key in environment variables. Device access and same-origin script access can expose localStorage: this is privacy through locality, **not encrypted secret storage**.
 
+## Optional local text help
+
+In **Build a drill**, expand **On-device text assistant**. Nothing downloads until **Load local assistant** is selected. The model/runtime download is several hundred MB; the catalog estimates roughly 600 MB GPU memory plus browser overhead, not a measured requirement or universal device guarantee. WebGPU is required. Prompts stay in the local inference path and are not saved to learner history or backups; download hosts still see ordinary request metadata.
+
+Use **Stop** while loading/thinking, **Unload from memory** after use, or **Remove downloaded model** to clear this model's cached/partial files. Failed local operations do not make Gemini calls. Short text suggestions are unverified and cannot replace scanned-problem extraction or the strict algebraic drill contract. See [requirements, privacy, licensing and unverified device acceptance](docs/LOCAL_ASSISTANT.md).
+
+For generation failures, **Check API connection (no key)** tests only our API, not Google/model access or quota. A failure's **Technical details → Copy safe diagnostics** excludes source/key/history. See [Gemini troubleshooting and separate-service deployment](docs/GEMINI_TROUBLESHOOTING.md); do not put a real key in chat or hosting environment variables.
+
 ## API overview
 
 | Method | Endpoint                  | Purpose                                                 |
@@ -141,8 +151,11 @@ The owner has deployed the new **`targetjee-studio-api`** Render service from `m
 
 ## Documentation
 
-- [Final repository findings, tests and unresolved provider acceptance](docs/FINAL_REVIEW.md)
-- [Hallmark installation receipt, design audit and recommended polish](docs/DESIGN_TOOLING.md)
+- [Current workbook redesign, test evidence and open acceptance gates](docs/WORKBOOK_REDESIGN.md)
+- [Optional browser-local text assistant: use, privacy and limits](docs/LOCAL_ASSISTANT.md)
+- [Gemini error stages, safe receipts and deployment/retest guide](docs/GEMINI_TROUBLESHOOTING.md)
+- [Earlier repository findings, tests and unresolved provider acceptance](docs/FINAL_REVIEW.md)
+- [Hallmark installation receipt and earlier audit](docs/DESIGN_TOOLING.md)
 - [Design research, citations, semantic tokens and explicit defaults](docs/DESIGN_RESEARCH.md)
 - [Architecture, security, equations and PDF traceability](docs/SYSTEM_ARCHITECTURE.md)
 - [Verification results and deployment status](docs/AUDIT_REPORT.md)

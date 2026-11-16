@@ -15,3 +15,29 @@ describe('bundled font notice preservation', () => {
     expect(published.equals(original)).toBe(true);
   });
 });
+
+describe('current production dependency inventory', () => {
+  it('includes the pinned in-browser runtime and its original Apache license', () => {
+    const entry = inventory.packages.find((item) => item.name === '@mlc-ai/web-llm')!;
+    expect(entry.declaredLicense).toBe('Apache-2.0');
+    const original = readFileSync('node_modules/@mlc-ai/web-llm/LICENSE');
+    expect(
+      entry.noticeFiles.some((file) => readFileSync(`public/notices/${file}`).equals(original)),
+    ).toBe(true);
+  });
+  it('has an entry for every installed non-development lockfile package', async () => {
+    const { existsSync } = await import('node:fs');
+    const lock = JSON.parse(readFileSync('package-lock.json', 'utf8'));
+    const expected: string[] = [];
+    for (const [location, record] of Object.entries(lock.packages) as Array<
+      [string, { dev?: boolean }]
+    >) {
+      if (!location || record.dev || !existsSync(`${location}/package.json`)) continue;
+      const metadata = JSON.parse(readFileSync(`${location}/package.json`, 'utf8'));
+      expected.push(metadata.name);
+    }
+    expect(inventory.packages.map((item) => item.name).sort()).toEqual(
+      [...new Set(expected)].sort(),
+    );
+  });
+});

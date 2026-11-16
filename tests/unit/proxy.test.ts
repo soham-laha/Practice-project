@@ -87,3 +87,34 @@ describe('fixed-origin BYOK proxy', () => {
     expect(await response.text()).not.toContain(KEY);
   });
 });
+
+describe('fixed keyless health proxy', () => {
+  it('never forwards incoming key/cookies or unapproved response data', async () => {
+    const fetch = vi.fn().mockResolvedValue(
+      Response.json({
+        status: 'ok',
+        service: 'targetjee-engine',
+        schema: 'targetjee.item.v2',
+        revision: 'a'.repeat(8),
+        secret: KEY,
+      }),
+    );
+    vi.stubGlobal('fetch', fetch);
+    const response = await GET(request({ 'x-gemini-api-key': KEY, cookie: KEY }), {
+      params: Promise.resolve({ path: ['health'] }),
+    });
+    expect(await response.json()).toEqual({
+      status: 'ok',
+      schema: 'targetjee.item.v2',
+      revision: 'a'.repeat(8),
+    });
+    expect(JSON.stringify(fetch.mock.calls)).not.toContain(KEY);
+    expect(fetch.mock.calls[0][0]).toBe('http://127.0.0.1:8000/health');
+  });
+  it('never forwards keys or raw exceptions when health fails', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error(KEY)));
+    const response = await GET(request(), { params: Promise.resolve({ path: ['health'] }) });
+    expect(response.status).toBe(503);
+    expect(await response.text()).not.toContain(KEY);
+  });
+});

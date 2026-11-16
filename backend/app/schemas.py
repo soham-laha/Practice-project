@@ -41,10 +41,10 @@ class Option(StrictModel):
 
 
 class DiagramAnchor(StrictModel):
-    label: str = Field(max_length=80)
+    label: str = Field(min_length=1, max_length=80)
     x: float = Field(ge=0, le=1)
     y: float = Field(ge=0, le=1)
-    description: str = Field(max_length=500)
+    description: str = Field(min_length=1, max_length=500)
 
 
 class Item(StrictModel):
@@ -89,8 +89,8 @@ class Item(StrictModel):
 
 
 class ExtractionResult(StrictModel):
-    # Also sent to Gemini as a response schema. Pydantic and the isolated
-    # algebra worker still validate independently; structured JSON is no proof.
+    # The source for the supported-keyword provider schema projection. Final
+    # Pydantic and isolated algebra checks are independent; JSON is no proof.
     items: list[Item] = Field(min_length=1, max_length=5)
 
 

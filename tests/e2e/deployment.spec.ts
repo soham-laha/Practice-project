@@ -15,12 +15,14 @@ test.describe('public two-service integration without provider spend', () => {
       timeout: 120000,
     });
     expect(health.status()).toBe(200);
-    expect(await health.json()).toEqual({
+    const { revision, ...contract } = await health.json();
+    expect(contract).toEqual({
       status: 'ok',
       service: 'targetjee-engine',
       schema: 'targetjee.item.v2',
       persistence: 'none',
     });
+    if (revision !== undefined) expect(revision).toMatch(/^(?:[a-f0-9]{8}|workspace)$/);
     expect(health.headers()['cache-control']).toBe('no-store');
     for (const exam of ['main', 'advanced']) {
       const reference = await request.get(`${backend}/v1/reference?exam=${exam}`, {
@@ -113,7 +115,7 @@ test.describe('public two-service integration without provider spend', () => {
     const csp = forge.headers()['content-security-policy'];
     const connections = csp.split(';').map((part) => part.trim());
     expect(connections.find((part) => part.startsWith('connect-src '))).toBe(
-      `connect-src 'self' ${backend}`,
+      `connect-src 'self' ${backend} https://huggingface.co https://us.aws.cdn.hf.co https://us.gcp.cdn.hf.co https://cas-bridge.xethub.hf.co https://cdn-lfs.huggingface.co https://cdn-lfs-us-1.hf.co https://cdn-lfs-eu-1.hf.co https://raw.githubusercontent.com`,
     );
   });
 

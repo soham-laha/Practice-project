@@ -14,7 +14,54 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> },
 ) {
-  if ((await params).path.join('/') !== 'upload-target')
+  const path = (await params).path.join('/');
+  if (path === 'health') {
+    try {
+      const target = new URL(process.env.TARGETJEE_API_BASE_URL || '');
+      if (
+        target.username ||
+        target.password ||
+        !['http:', 'https:'].includes(target.protocol) ||
+        (target.protocol !== 'https:' &&
+          !['localhost', '127.0.0.1', '[::1]'].includes(target.hostname))
+      )
+        throw new Error();
+      const response = await fetch(`${target.origin}/health`, {
+        cache: 'no-store',
+        credentials: 'omit',
+        redirect: 'error',
+        signal: AbortSignal.timeout(15000),
+      });
+      const data = await response.json();
+      if (
+        !response.ok ||
+        data?.status !== 'ok' ||
+        data?.service !== 'targetjee-engine' ||
+        data?.schema !== 'targetjee.item.v2'
+      )
+        throw new Error();
+      return NextResponse.json(
+        {
+          status: 'ok',
+          schema: 'targetjee.item.v2',
+          revision:
+            typeof data.revision === 'string' && /^(?:[a-f0-9]{8}|workspace)$/.test(data.revision)
+              ? data.revision
+              : null,
+        },
+        { headers: { 'Cache-Control': 'no-store' } },
+      );
+    } catch {
+      return NextResponse.json(
+        {
+          detail:
+            'The API is unavailable, warming up or not configured. This check did not contact Gemini.',
+        },
+        { status: 503, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
+  }
+  if (path !== 'upload-target')
     return NextResponse.json({ detail: 'Unknown endpoint' }, { status: 404 });
   let url = '/api/engine/v1/extractions/upload';
   const base = process.env.TARGETJEE_API_BASE_URL;

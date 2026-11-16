@@ -56,11 +56,10 @@ export function ByokModal() {
       <div className="modal-symbol">
         <KeyRound size={26} />
       </div>
-      <span className="eyebrow">YOUR KEY. YOUR CONTROL.</span>
       <h2 id="byok-title">
         A little intelligence.
         <br />
-        <em>Entirely on your terms.</em>
+        Entirely on your terms.
       </h2>
       <p className="muted">
         Save a Gemini key for the problem forge and your AI coach. Saving checks the format only;
@@ -129,8 +128,8 @@ export function ByokModal() {
           value={model}
           onChange={(e) => setModel(e.target.value as typeof model)}
         >
-          <option value="gemini-flash-latest">Gemini Flash · balanced</option>
-          <option value="gemini-flash-lite-latest">Gemini Flash Lite · lightweight</option>
+          <option value="gemini-flash-latest">Gemini Flash (balanced)</option>
+          <option value="gemini-flash-lite-latest">Gemini Flash Lite (lightweight)</option>
         </select>
         <div className="privacy-note" id="key-privacy">
           <ShieldCheck size={19} />

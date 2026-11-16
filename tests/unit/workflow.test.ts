@@ -8,6 +8,17 @@ const workflow = readFileSync('.github/workflows/quality.yml', 'utf8');
 const command = workflow.match(/npx wait-on ([^\n]+)/)?.[1] ?? '';
 const resources = command.split(/\s+/).filter((part) => /^https?(?:-get)?:\/\//.test(part));
 
+it('both browser workflows install the Python pipeline used by successful Forge fixtures', () => {
+  const hosted = readFileSync('.github/workflows/hosted.yml', 'utf8');
+  for (const source of [workflow, hosted]) {
+    expect(source).toMatch(/actions\/setup-python@[a-f0-9]{40}/);
+    const install = source.indexOf('python -m pip install -r backend/requirements');
+    const browser = source.indexOf('run: npm run test:e2e');
+    expect(install).toBeGreaterThan(-1);
+    expect(browser).toBeGreaterThan(install);
+  }
+});
+
 describe('CI readiness probes', () => {
   it('uses explicit GET for both production services', () => {
     expect(resources).toEqual(['http-get://127.0.0.1:3000', 'http-get://127.0.0.1:8000/health']);

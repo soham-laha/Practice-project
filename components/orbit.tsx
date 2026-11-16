@@ -21,7 +21,8 @@ export function Orbit() {
       } catch {
         return;
       }
-      renderer.setSize(260, 260);
+      // Keep the drawing buffer; let the responsive CSS size the canvas's slot.
+      renderer.setSize(260, 260, false);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
       container.appendChild(renderer.domElement);
       const scene = new THREE.Scene(),

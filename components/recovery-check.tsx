@@ -54,7 +54,7 @@ export function RecoveryCheck({
       aria-label="45-second recovery check"
     >
       <div className="recovery-title">
-        {repaired || result === 'right' ? <CheckCircle2 size={17} /> : <Timer size={17} />}04 ·{' '}
+        {repaired || result === 'right' ? <CheckCircle2 size={17} /> : <Timer size={17} />}04,{' '}
         {repaired || result === 'right'
           ? 'Thinking repaired. Keep the rule.'
           : 'Give the thinking a second chance.'}
@@ -117,7 +117,7 @@ export function RecoveryCheck({
               </form>
               {left === 0 && result !== 'right' && (
                 <p className="tiny-text">
-                  The 45-second window has passed. Keep thinking—there’s no cutoff.
+                  The 45-second window has passed. Keep thinking, there’s no cutoff.
                 </p>
               )}
               {result === 'wrong' && (
@@ -137,7 +137,7 @@ export function RecoveryCheck({
                 <div className="recovery-result" role="status">
                   <CheckCircle2 size={16} />
                   <span>
-                    <MathExpr value={trap.recovery_check.expression} /> —{' '}
+                    <MathExpr value={trap.recovery_check.expression} />,{' '}
                     {trap.recovery_check.explanation}
                     {revealed && result !== 'right'
                       ? ' Try entering the answer after following the reasoning.'

@@ -159,10 +159,7 @@ export function Dashboard() {
     <>
       <div className="page-title split-heading">
         <div>
-          <span className="eyebrow">NOT A JUDGMENT. A WAY FORWARD.</span>
-          <h1>
-            Your effort, <em>in perspective.</em>
-          </h1>
+          <h1>Your effort, in perspective.</h1>
           <p>Keep the progress. Understand the slips. Take one thoughtful next step.</p>
         </div>
         <Link href="/simulator" className="button primary">
@@ -173,7 +170,7 @@ export function Dashboard() {
         <div className="report-banner">
           <Info size={22} />
           <div>
-            <h2>Sample report · an illustration, not your performance</h2>
+            <h2>Sample report, an illustration, not your performance</h2>
             <p>Explore the full repair flow. Nothing here is added to your history or mastery.</p>
           </div>
           <button className="button secondary small-button" onClick={() => setSample(null)}>
@@ -191,8 +188,8 @@ export function Dashboard() {
                 : 'A clean drill. Keep trusting the process.'}
             </h2>
             <p>
-              JEE {session.exam === 'main' ? 'Main' : 'Advanced'} · {session.items.length} questions
-              · {dateLabel(session.completedAt)}
+              JEE {session.exam === 'main' ? 'Main' : 'Advanced'}, {session.items.length} questions
+              , {dateLabel(session.completedAt)}
             </p>
           </div>
           <span className="pill accent">
@@ -227,7 +224,7 @@ export function Dashboard() {
           </div>
           <p className="stat-note">
             {analysis
-              ? `Trap-free potential: ${analysis.maximum} · includes unattempted`
+              ? `Trap-free potential: ${analysis.maximum}, includes unattempted`
               : 'Find the marks hidden in your slips.'}
           </p>
         </section>
@@ -241,7 +238,7 @@ export function Dashboard() {
             <small>× benchmark</small>
           </div>
           <p className="stat-note">
-            {stage.name} · {learner.timelyStreak}/3 steady drills
+            {stage.name}, {learner.timelyStreak}/3 steady drills
           </p>
         </section>
         <section className="stat-card card">
@@ -261,9 +258,7 @@ export function Dashboard() {
           <div className="empty-symbol">
             <ScanLine size={27} />
           </div>
-          <h2>
-            Your first insight is <em>one drill away.</em>
-          </h2>
+          <h2>Your first insight is one drill away.</h2>
           <p>
             No scores to compare, no streak to protect. Try a short reference drill, or explore an
             explicitly labelled sample report.
@@ -283,7 +278,7 @@ export function Dashboard() {
           <section className="progress-panel card">
             <div className="panel-heading">
               <h2>A little consistency goes a long way.</h2>
-              <span>Last 7 days · local time</span>
+              <span>Last 7 days, local time</span>
             </div>
             <div
               className="activity-chart"
@@ -335,17 +330,16 @@ export function Dashboard() {
                   </span>
                   <span className="session-info">
                     <strong>
-                      JEE {s.exam === 'main' ? 'Main' : 'Advanced'} ·{' '}
+                      JEE {s.exam === 'main' ? 'Main' : 'Advanced'},{' '}
                       {s.source === 'reference' ? 'Reference drill' : 'Personal drill'}
                     </strong>
                     <small>
-                      {dateLabel(s.completedAt)} · {s.items.length} questions ·{' '}
-                      {PACING[s.tier].name}
+                      {dateLabel(s.completedAt)}, {s.items.length} questions, {PACING[s.tier].name}
                     </small>
                   </span>
                   <span className="session-score">
                     {scoreSession(s)}
-                    <span className="muted" style={{ fontSize: 9 }}>
+                    <span className="muted" style={{ fontSize: 12 }}>
                       /{s.items.length * 4}
                     </span>
                   </span>
@@ -371,7 +365,7 @@ export function Dashboard() {
                   <option value="">Select a saved drill</option>
                   {learner.sessions.slice(5).map((s) => (
                     <option key={s.id} value={s.id}>
-                      {dateLabel(s.completedAt)} · {scoreSession(s)}/{s.items.length * 4}
+                      {dateLabel(s.completedAt)}, {scoreSession(s)}/{s.items.length * 4}
                     </option>
                   ))}
                 </select>
@@ -379,22 +373,21 @@ export function Dashboard() {
             )}
           </section>
           <section className="pacing-panel dashboard-lower">
-            <span className="card-kicker">
-              <Leaf size={15} />
-              PROGRESS WITHOUT PRESSURE
-            </span>
+            <h2 className="pacing-title">Pacing progress</h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-              <div
-                className="ring"
-                style={{ '--value': (learner.timelyStreak / 3) * 100 } as CSSProperties}
-              >
-                <div>
-                  <strong>
-                    {learner.timelyStreak}
-                    <span style={{ fontSize: 11, fontWeight: 500 }}>/3</span>
-                  </strong>
-                  <small>STEADY DRILLS</small>
+              <div className="gauge">
+                <div
+                  className="ring"
+                  style={{ '--value': (learner.timelyStreak / 3) * 100 } as CSSProperties}
+                >
+                  <div>
+                    <strong>
+                      {learner.timelyStreak}
+                      <span style={{ fontSize: 12, fontWeight: 500 }}>/3</span>
+                    </strong>
+                  </div>
                 </div>
+                <span>Steady drills</span>
               </div>
               <div>
                 <h3 style={{ margin: '0 0 7px', fontSize: 17 }}>{stage.name}</h3>
@@ -417,24 +410,28 @@ export function Dashboard() {
               <span>All saved drills</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 24 }}>
-              <div
-                className="ring"
-                style={
-                  { '--value': totalItems ? (correctItems / totalItems) * 100 : 0 } as CSSProperties
-                }
-              >
-                <div>
-                  <strong>
-                    {totalItems ? `${Math.round((correctItems / totalItems) * 100)}%` : '—'}
-                  </strong>
-                  <small>ACCURACY</small>
+              <div className="gauge">
+                <div
+                  className="ring"
+                  style={
+                    {
+                      '--value': totalItems ? (correctItems / totalItems) * 100 : 0,
+                    } as CSSProperties
+                  }
+                >
+                  <div>
+                    <strong>
+                      {totalItems ? `${Math.round((correctItems / totalItems) * 100)}%` : '—'}
+                    </strong>
+                  </div>
                 </div>
+                <span>Accuracy</span>
               </div>
               <div>
                 <strong style={{ fontSize: 12 }}>
                   {totalItems ? `${correctItems} of ${totalItems} correct` : 'Your own baseline.'}
                 </strong>
-                <p className="tiny-text" style={{ marginTop: 5, fontSize: 9 }}>
+                <p className="tiny-text" style={{ marginTop: 5, fontSize: 12 }}>
                   Not a rank. A place to grow.
                 </p>
               </div>
@@ -461,12 +458,12 @@ export function Dashboard() {
         <>
           <ReviewStudio key={session.id} session={session} sample={!!sample} />
           <details className="audit-details card">
-            <summary>Behind the estimate · transparent mathematical details</summary>
+            <summary>Behind the estimate, transparent mathematical details</summary>
             <div className="model-metrics">
               <div className="metric-detail">
                 3PL ability estimate<strong>{analysis!.ability.theta.toFixed(3)}</strong>
                 <p>
-                  SE {analysis!.ability.se?.toFixed(3) ?? 'unavailable'} · information{' '}
+                  SE {analysis!.ability.se?.toFixed(3) ?? 'unavailable'}, information{' '}
                   {analysis!.ability.information.toFixed(3)}. Bounds −3 to 3; finite-difference
                   Newton–Raphson.
                 </p>
@@ -478,7 +475,7 @@ export function Dashboard() {
                 </strong>
                 <p>
                   Conditional SE {analysis!.speed?.se.toFixed(3) ?? 'unavailable'}. Positive means
-                  faster than this reference benchmark—not faster than other learners.
+                  faster than this reference benchmark, not faster than other learners.
                 </p>
               </div>
               <div className="metric-detail">
@@ -602,9 +599,9 @@ export function Dashboard() {
         </div>
         <h2 id="reset-title">Make room for a fresh start?</h2>
         <p>
-          This removes your drill history, recovery checks, cards, browser key and preferences on
-          this device only. It cannot be undone. Export a backup first if you want to keep your
-          progress.
+          This removes your drill history, recovery checks, cards, browser key, preferences and
+          downloaded local model on this device only. It cannot be undone. Export a backup first if
+          you want to keep your progress.
         </p>
         <div className="setup-actions">
           <button className="button secondary" onClick={() => setReset(false)} disabled={busy}>
