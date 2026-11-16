@@ -12,12 +12,6 @@ on:
         required: false
         default: ''
         type: string
-  # Bootstrap a public audit before this workflow is merged into main. A manual
-  # dispatch becomes available once the workflow exists on the default branch.
-  push:
-    paths:
-      - .github/workflows/hosted.yml
-      - scripts/check-hosted.mjs
 permissions:
   contents: read
 concurrency:
