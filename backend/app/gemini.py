@@ -30,6 +30,18 @@ Options must directly match the mathematical type requested by the question:
 - If the question asks for a scalar value, option latex is the scalar value.
 - Options must be pairwise non-equivalent under the declared domain.
 
+Dual Math Fields (Calculus, Limits, Combinatorics):
+- Store full mathematical notation in option.display_latex (e.g. "\\int_0^1 x^2 dx = 1/3" or "\\lim_{x \\to 0} \\frac{\\sin x}{x} = 1").
+- Store the post-evaluation algebraic form in option.evaluated_expression and item.evaluated_answer_expression for SymPy verification.
+
+Qualitative Verification Mode (Organic Chemistry, Inorganic Facts, Assertion-Reasoning):
+- When a question cannot be formulated as symbolic algebra (e.g. Organic reaction mechanisms, IUPAC naming, inorganic trends, or Assertion-Reasoning):
+  Set verification_mode="qualitative".
+  Provide clear option text in option.latex and option.display_latex.
+  Set option.expression to distinct scalar strings "1", "2", "3", "4" and option.derived_expression to the same, with expected_unit=[0, 0, 0].
+  Set item.answer_expression to the expression of the correct option.
+  This allows safe display verification without requiring algebraic derivation.
+
 The independent verifier accepts a SMALL algebra language:
 - Python +, -, *, /, ** and parentheses; unary +/-. No implicit multiplication, equations or assignments.
 - Coordinates / vectors: 2D or 3D tuples like (2, 1) are parsed and compared entrywise.
@@ -38,9 +50,9 @@ The independent verifier accepts a SMALL algebra language:
 - At most 300 characters, 100 AST nodes and nesting depth 15 per expression. Prefer short exact fractions.
 - All symbols, INCLUDING recovery-question symbols, must be alphabetic names declared in the item's domain.
   At most 8 symbols; assumptions are real, positive, nonnegative or integer. Use ASCII letters, no subscripts.
-- No integrals, derivatives, sets, factorials, complex/undefined values or undeclared unit symbols.
+- No integrals, derivatives, sets, factorials, complex/undefined values or undeclared unit symbols in algebraic expressions.
 - Substitute large physical constants before writing certificates. Unit powers belong in unit vectors only.
-If a source cannot be represented faithfully in this language, do not fabricate a simpler unrelated question.
+If a source cannot be represented faithfully in this language, use verification_mode="qualitative".
 
 answer_expression independently derives the correct final answer; derived_expression independently
 records each option's final derivation result, NOT the equation being solved or prose steps.

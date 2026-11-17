@@ -24,6 +24,57 @@ import { generateLocalDrill } from '@/lib/local-generator';
 import { itemSchema, type Item } from '@/lib/types';
 import { KEYS } from '@/lib/storage';
 
+async function splitPdfToImages(pdfFile: File): Promise<Blob[]> {
+  const pdfjs = await import('pdfjs-dist');
+  if (typeof window !== 'undefined') {
+    pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+  }
+  const arrayBuffer = await pdfFile.arrayBuffer();
+  const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+  const numPages = pdf.numPages;
+  const images: Blob[] = [];
+
+  for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+    const page = await pdf.getPage(pageNum);
+    const viewport = page.getViewport({ scale: 1.5 });
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.floor(viewport.width);
+    canvas.height = Math.floor(viewport.height);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) continue;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (page.render as any)({ canvasContext: ctx, viewport }).promise;
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, 'image/jpeg', 0.85),
+    );
+    if (blob) {
+      images.push(blob);
+    }
+  }
+  return images;
+}
+
+async function apiRequestWithBackoff(
+  path: string,
+  body: object | FormData,
+  maxRetries = 2,
+): Promise<Record<string, unknown>> {
+  let attempt = 0;
+  while (true) {
+    try {
+      return (await apiRequest(path, body)) as Record<string, unknown>;
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 429 && attempt < maxRetries) {
+        attempt++;
+        const delay = Math.pow(2, attempt) * 1000;
+        await new Promise((r) => setTimeout(r, delay));
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+
 export function Forge() {
   const { exam, model, setModel, hasKey, setKeyModal } = useApp(),
     router = useRouter();
@@ -38,13 +89,21 @@ export function Forge() {
     [copied, setCopied] = useState(''),
     [engine, setEngine] = useState(''),
     [checking, setChecking] = useState(false),
-    [items, setItems] = useState<Item[]>([]);
+    [items, setItems] = useState<Item[]>([]),
+    [pdfProgress, setPdfProgress] = useState<{ current: number; total: number } | null>(null),
+    [needsOcrReview, setNeedsOcrReview] = useState<
+      Array<{ item: Item; reason: string; error?: string }>
+    >([]),
+    [reverifyingId, setReverifyingId] = useState<string | null>(null),
+    [reverifyError, setReverifyError] = useState<Record<string, string>>({});
 
   const generatorMode = userEngineMode ?? (hasKey ? 'cloud' : 'local');
   function chooseFile(f: File | undefined) {
     setError('');
     setFailure(null);
     setItems([]);
+    setNeedsOcrReview([]);
+    setPdfProgress(null);
     setFile(null);
     if (!f) return;
     if (f.size > 20 * 1024 * 1024) {
@@ -105,6 +164,74 @@ export function Forge() {
     }
     setBusy(true);
     try {
+      if (tab === 'pdf' && file && generatorMode === 'cloud') {
+        try {
+          const pageBlobs = await splitPdfToImages(file);
+          if (pageBlobs.length > 1) {
+            setPdfProgress({ current: 0, total: pageBlobs.length });
+            const collectedItems: Item[] = [];
+            const collectedOcr: Array<{ item: Item; reason: string; error?: string }> = [];
+
+            for (let i = 0; i < pageBlobs.length; i++) {
+              setPdfProgress({ current: i + 1, total: pageBlobs.length });
+              const pageFile = new File([pageBlobs[i]], `page-${i + 1}.jpg`, {
+                type: 'image/jpeg',
+              });
+              const form = new FormData();
+              form.set('file', pageFile);
+              form.set('exam', exam);
+              form.set('model', model);
+
+              try {
+                const result = await apiRequestWithBackoff('v1/extractions/upload', form);
+                const rawItems = Array.isArray(result.verified_items)
+                  ? result.verified_items
+                  : Array.isArray(result.items)
+                    ? result.items
+                    : [];
+                for (const raw of rawItems) {
+                  try {
+                    const parsed = itemSchema.parse(raw);
+                    if (parsed.exam === exam && !collectedItems.some((it) => it.id === parsed.id)) {
+                      collectedItems.push(parsed);
+                    }
+                  } catch {
+                    // ignore invalid
+                  }
+                }
+                if (Array.isArray(result.needs_ocr_review)) {
+                  for (const ocr of result.needs_ocr_review as Array<{
+                    item: unknown;
+                    reason: string;
+                    error?: string;
+                  }>) {
+                    try {
+                      const parsed = itemSchema.parse(ocr.item);
+                      if (!collectedOcr.some((it) => it.item.id === parsed.id)) {
+                        collectedOcr.push({ item: parsed, reason: ocr.reason, error: ocr.error });
+                      }
+                    } catch {
+                      // ignore
+                    }
+                  }
+                }
+                setItems([...collectedItems]);
+                setNeedsOcrReview([...collectedOcr]);
+              } catch (pageErr) {
+                console.warn(`Page ${i + 1} extraction failed:`, pageErr);
+              }
+            }
+
+            if (!collectedItems.length && !collectedOcr.length) {
+              throw new Error('No verified problems could be extracted from this PDF.');
+            }
+            return;
+          }
+        } catch (pdfErr) {
+          console.warn('PDF splitting fallback to direct upload:', pdfErr);
+        }
+      }
+
       let body: object | FormData;
       if (tab === 'text') body = { text, exam, model };
       else {
@@ -114,19 +241,46 @@ export function Forge() {
         form.set('model', model);
         body = form;
       }
-      const result = await apiRequest(
+      const result = await apiRequestWithBackoff(
         tab === 'text' ? 'v1/extractions' : 'v1/extractions/upload',
         body,
       );
-      if (!Array.isArray(result.items) || !result.items.length || result.items.length > 25)
-        throw new Error();
-      const parsed: Item[] = result.items.map((i: unknown) => itemSchema.parse(i));
-      if (
-        parsed.some((i) => i.exam !== exam) ||
-        new Set(parsed.map((i) => i.id)).size !== parsed.length
-      )
-        throw new Error();
+      const rawItems = Array.isArray(result.verified_items)
+        ? result.verified_items
+        : Array.isArray(result.items)
+          ? result.items
+          : [];
+      const ocrRaw = Array.isArray(result.needs_ocr_review)
+        ? (result.needs_ocr_review as Array<{ item: unknown; reason: string; error?: string }>)
+        : [];
+
+      if (!rawItems.length && !ocrRaw.length) {
+        throw new Error('No verified problems could be extracted. Please check your source.');
+      }
+
+      const parsed: Item[] = [];
+      for (const raw of rawItems) {
+        try {
+          const item = itemSchema.parse(raw);
+          if (item.exam === exam) {
+            parsed.push(item);
+          }
+        } catch {
+          // ignore
+        }
+      }
       setItems(parsed);
+
+      const ocrItems: Array<{ item: Item; reason: string; error?: string }> = [];
+      for (const ocr of ocrRaw) {
+        try {
+          const item = itemSchema.parse(ocr.item);
+          ocrItems.push({ item, reason: ocr.reason, error: ocr.error });
+        } catch {
+          // ignore
+        }
+      }
+      setNeedsOcrReview(ocrItems);
     } catch (e) {
       if (e instanceof ApiError) {
         setError(e.message);
@@ -140,7 +294,55 @@ export function Forge() {
         );
     } finally {
       setBusy(false);
+      setPdfProgress(null);
     }
+  }
+
+  async function reverifyItem(index: number) {
+    const target = needsOcrReview[index];
+    if (!target) return;
+    setReverifyingId(target.item.id);
+    setReverifyError((prev) => ({ ...prev, [target.item.id]: '' }));
+
+    try {
+      const res = (await apiRequest('v1/items/validate', { items: [target.item] })) as {
+        results?: Array<{ valid: boolean; canonical_options?: Record<string, string> }>;
+      };
+      if (res.results && res.results[0]?.valid) {
+        const validatedItem = { ...target.item };
+        if (res.results[0].canonical_options) {
+          validatedItem.options = validatedItem.options.map((opt) => ({
+            ...opt,
+            latex: res.results![0].canonical_options![opt.id] || opt.latex,
+          }));
+        }
+        setItems((prev) => [...prev, validatedItem]);
+        setNeedsOcrReview((prev) => prev.filter((_, i) => i !== index));
+      } else {
+        setReverifyError((prev) => ({
+          ...prev,
+          [target.item.id]: 'Validation failed. Check your KaTeX formula or option values.',
+        }));
+      }
+    } catch (err) {
+      setReverifyError((prev) => ({
+        ...prev,
+        [target.item.id]:
+          err instanceof Error ? err.message : 'Validation failed. Check your KaTeX formula.',
+      }));
+    } finally {
+      setReverifyingId(null);
+    }
+  }
+
+  function updateOcrItemField(index: number, updater: (item: Item) => Item) {
+    setNeedsOcrReview((prev) => {
+      const copy = [...prev];
+      if (copy[index]) {
+        copy[index] = { ...copy[index], item: updater(copy[index].item) };
+      }
+      return copy;
+    });
   }
   function begin() {
     if (!items.length || items.some((item) => item.exam !== exam)) return;
@@ -330,11 +532,28 @@ export function Forge() {
             </button>
           </div>
           {busy && (
-            <p className="forge-working" role="status">
-              {generatorMode === 'local'
-                ? 'Generating verified options and distractors directly in your browser…'
-                : 'Waiting for Gemini and the algebra check. Allow up to two minutes. No automatic retry or model switch.'}
-            </p>
+            <div className="forge-working" role="status">
+              {pdfProgress ? (
+                <>
+                  <p>
+                    Extracting page {pdfProgress.current} of {pdfProgress.total} (
+                    {Math.round((pdfProgress.current / pdfProgress.total) * 100)}%)...
+                  </p>
+                  <progress
+                    value={pdfProgress.current}
+                    max={pdfProgress.total}
+                    style={{ width: '100%', height: '8px', marginTop: '6px' }}
+                  />
+                </>
+              ) : generatorMode === 'local' ? (
+                <p>Generating verified options and distractors directly in your browser…</p>
+              ) : (
+                <p>
+                  Waiting for Gemini and the algebra check. Allow up to two minutes. No automatic
+                  retry or model switch.
+                </p>
+              )}
+            </div>
           )}
           {error && (
             <div className="forge-error" role="alert">
@@ -499,6 +718,136 @@ export function Forge() {
           <button className="button primary" onClick={begin}>
             Looks right. Start this drill <ArrowRight size={16} />
           </button>
+        </section>
+      )}
+      {needsOcrReview.length > 0 && (
+        <section className="forge-result" role="region" aria-label="OCR Review">
+          <p className="result-status">
+            <AlertCircle size={17} />
+            OCR formula review required ({needsOcrReview.length})
+          </p>
+          <h2>Review and repair extracted formulas</h2>
+          <p className="muted tiny-text">
+            These questions were extracted with a potential OCR formula or sign mismatch. Edit the
+            options or key below and click &quot;Re-verify&quot; to include them in your drill.
+          </p>
+          {needsOcrReview.map((ocr, idx) => (
+            <div key={ocr.item.id} className="review-question">
+              <strong>Question {items.length + idx + 1}: </strong>
+              <MathText text={ocr.item.prompt} />
+              <p className="tiny-text" style={{ marginTop: '4px' }}>
+                {ocr.reason}
+              </p>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '8px',
+                  marginTop: '8px',
+                }}
+              >
+                {ocr.item.options.map((opt, optIdx) => (
+                  <div key={opt.id}>
+                    <label className="field-label" htmlFor={`ocr-${ocr.item.id}-${opt.id}`}>
+                      Option {opt.id} {opt.id === ocr.item.correct_id ? '(Key)' : ''}
+                    </label>
+                    <input
+                      id={`ocr-${ocr.item.id}-${opt.id}`}
+                      type="text"
+                      value={opt.latex}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        updateOcrItemField(idx, (prev) => {
+                          const opts = [...prev.options];
+                          opts[optIdx] = {
+                            ...opts[optIdx],
+                            latex: val,
+                            expression: val,
+                            derived_expression: val,
+                          };
+                          return { ...prev, options: opts };
+                        });
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div
+                style={{
+                  marginTop: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <div>
+                  <label className="field-label" htmlFor={`ocr-key-${ocr.item.id}`}>
+                    Answer key
+                  </label>
+                  <select
+                    id={`ocr-key-${ocr.item.id}`}
+                    value={ocr.item.correct_id}
+                    onChange={(e) => {
+                      const newKey = e.target.value as 'A' | 'B' | 'C' | 'D';
+                      updateOcrItemField(idx, (prev) => {
+                        const opts = prev.options.map((opt) => ({
+                          ...opt,
+                          trap:
+                            opt.id === newKey
+                              ? null
+                              : opt.trap || {
+                                  label: 'Distractor trap',
+                                  why_plausible: 'Common alternative calculation',
+                                  first_wrong_pivot: 'Sign or index inversion',
+                                  counterfactual_valid_when: 'Under inverted assumptions',
+                                  avoidance_rule: 'Check derivation steps',
+                                  recovery_check: {
+                                    question: 'Check the formula step',
+                                    answer: '1',
+                                    expression: '1',
+                                    target_expression: '1',
+                                    explanation: 'Re-evaluate with checked signs',
+                                  },
+                                },
+                        }));
+                        return {
+                          ...prev,
+                          correct_id: newKey,
+                          answer_expression:
+                            opts.find((o) => o.id === newKey)?.expression || prev.answer_expression,
+                          options: opts,
+                        };
+                      });
+                    }}
+                  >
+                    <option value="A">Option A</option>
+                    <option value="B">Option B</option>
+                    <option value="C">Option C</option>
+                    <option value="D">Option D</option>
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  className="button secondary small-button"
+                  disabled={reverifyingId === ocr.item.id}
+                  onClick={() => void reverifyItem(idx)}
+                >
+                  {reverifyingId === ocr.item.id ? (
+                    <LoaderCircle size={14} className="spinner" />
+                  ) : (
+                    <Check size={14} />
+                  )}
+                  Re-verify question
+                </button>
+              </div>
+              {reverifyError[ocr.item.id] && (
+                <p className="tiny-text" style={{ marginTop: '6px' }} role="alert">
+                  {reverifyError[ocr.item.id]}
+                </p>
+              )}
+            </div>
+          ))}
         </section>
       )}
     </>

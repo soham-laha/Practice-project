@@ -150,7 +150,7 @@ async def reference(exam: Exam = "main"):
 @app.post("/v1/items/validate")
 async def validate(payload: ValidationRequest):
     try:
-        await asyncio.wait_for(validation_queue.acquire(), timeout=0.5)
+        await asyncio.wait_for(validation_queue.acquire(), timeout=8.0)
     except TimeoutError:
         raise HTTPException(429, "Symbolic workers are busy. Please retry shortly.") from None
     try:
@@ -204,32 +204,62 @@ async def forge(
     mime: str | None = None,
 ):
     try:
-        await asyncio.wait_for(queue.acquire(), timeout=0.5)
+        await asyncio.wait_for(queue.acquire(), timeout=8.0)
     except TimeoutError:
         raise HTTPException(
             429, "The two-worker forge queue is full. Please retry shortly."
         ) from None
     try:
         items = await gemini.extract(payload, key, data, mime)
-        try:
-            verification = await run_in_threadpool(verify_bounded, items)
-        except ValueError as exc:
-            # Translate only known verifier messages; never echo arbitrary
-            # worker/model text or exception contents into a BYOK response.
-            status, detail = forge_rejection(exc)
+        verified_items = []
+        needs_ocr_review = []
+        skipped_items = []
+        verification = []
+        first_exc = None
+
+        for item in items:
+            try:
+                res_list = await run_in_threadpool(verify_bounded, [item])
+                res = res_list[0]
+                for option in item.options:
+                    option.latex = res["canonical_options"][option.id]
+                secrets.SystemRandom().shuffle(item.options)
+                verified_items.append(item)
+                verification.append(res)
+            except ValueError as exc:
+                if first_exc is None:
+                    first_exc = exc
+                err_msg = str(exc)
+                if "Key does not uniquely match solution certificate" in err_msg:
+                    needs_ocr_review.append(
+                        {
+                            "item": item.model_dump(),
+                            "reason": "Key does not uniquely match solution certificate (check for OCR sign, subscript, or coordinate typos)",
+                            "error": err_msg,
+                        }
+                    )
+                else:
+                    skipped_items.append(
+                        {
+                            "item_id": item.id,
+                            "reason": err_msg,
+                        }
+                    )
+
+        if not verified_items and not needs_ocr_review:
+            status, detail = forge_rejection(first_exc or ValueError("No items could be verified"))
             raise EngineError(
                 status,
                 detail,
                 "verification_timeout" if status == 503 else "verification_rejected",
                 "verification",
             ) from None
-        for item, result in zip(items, verification, strict=True):
-            # Never trust the model's display string over the checked expression.
-            for option in item.options:
-                option.latex = result["canonical_options"][option.id]
-            secrets.SystemRandom().shuffle(item.options)
+
         return {
-            "items": [i.model_dump() for i in items],
+            "items": [i.model_dump() for i in verified_items],
+            "verified_items": [i.model_dump() for i in verified_items],
+            "needs_ocr_review": needs_ocr_review,
+            "skipped_items": skipped_items,
             "verification": verification,
             "source": "gemini",
         }
@@ -317,7 +347,7 @@ async def extract_upload(
 async def coach(payload: CoachRequest, x_gemini_api_key: str | None = Header(default=None)):
     key = require_key(x_gemini_api_key)
     try:
-        await asyncio.wait_for(queue.acquire(), timeout=0.5)
+        await asyncio.wait_for(queue.acquire(), timeout=8.0)
     except TimeoutError:
         raise HTTPException(429, "Coach is busy. Please retry shortly.") from None
     try:

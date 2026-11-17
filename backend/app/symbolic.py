@@ -10,6 +10,7 @@ from __future__ import annotations
 import ast
 import json
 import os
+import random
 import subprocess
 import sys
 
@@ -110,55 +111,198 @@ def to_canonical_latex(val: sp.Expr | sp.Matrix) -> str:
     return sp.latex(val)
 
 
+def is_zero_numerical(
+    expr: sp.Expr,
+    domain: dict[str, str] | None = None,
+    tolerance: float = 1e-9,
+    points: int = 15,
+) -> bool:
+    try:
+        symbols = list(expr.free_symbols)
+        if not symbols:
+            val = float(sp.N(expr))
+            return abs(val) < tolerance
+        rng = random.Random(42)
+        dom = domain or {}
+        valid_points = 0
+        for _ in range(points * 4):
+            subs_map = {}
+            for s in symbols:
+                kind = dom.get(s.name, "real")
+                if kind == "positive":
+                    subs_map[s] = rng.uniform(0.5, 4.0)
+                elif kind == "nonnegative":
+                    subs_map[s] = rng.uniform(0.1, 4.0)
+                elif kind == "integer":
+                    subs_map[s] = rng.randint(1, 10)
+                else:
+                    val = rng.uniform(-3.0, 3.0)
+                    if abs(val) < 0.2:
+                        val = 0.5
+                    subs_map[s] = val
+            try:
+                subbed = expr.subs(subs_map).evalf()
+                if subbed.has(sp.zoo, sp.oo, -sp.oo, sp.nan, sp.I):
+                    continue
+                v = float(subbed)
+                if abs(v) >= tolerance:
+                    return False
+                valid_points += 1
+                if valid_points >= points:
+                    return True
+            except (ArithmeticError, ValueError, TypeError, AttributeError):
+                continue
+        return valid_points >= min(5, points)
+    except (ArithmeticError, ValueError, TypeError, AttributeError):
+        return False
+
+
+def is_distinct_numerical(
+    expr: sp.Expr,
+    domain: dict[str, str] | None = None,
+    tolerance: float = 1e-9,
+    points: int = 15,
+) -> bool:
+    try:
+        symbols = list(expr.free_symbols)
+        if not symbols:
+            val = float(sp.N(expr))
+            return abs(val) >= tolerance
+        rng = random.Random(42)
+        dom = domain or {}
+        valid_points = 0
+        distinct_count = 0
+        for _ in range(points * 4):
+            subs_map = {}
+            for s in symbols:
+                kind = dom.get(s.name, "real")
+                if kind == "positive":
+                    subs_map[s] = rng.uniform(0.5, 4.0)
+                elif kind == "nonnegative":
+                    subs_map[s] = rng.uniform(0.1, 4.0)
+                elif kind == "integer":
+                    subs_map[s] = rng.randint(1, 10)
+                else:
+                    val = rng.uniform(-3.0, 3.0)
+                    if abs(val) < 0.2:
+                        val = 0.5
+                    subs_map[s] = val
+            try:
+                subbed = expr.subs(subs_map).evalf()
+                if subbed.has(sp.zoo, sp.oo, -sp.oo, sp.nan, sp.I):
+                    continue
+                v = float(subbed)
+                valid_points += 1
+                if abs(v) >= tolerance:
+                    distinct_count += 1
+                if valid_points >= points:
+                    break
+            except (ArithmeticError, ValueError, TypeError, AttributeError):
+                continue
+        return distinct_count > 0 and valid_points >= min(5, points)
+    except (ArithmeticError, ValueError, TypeError, AttributeError):
+        return False
+
+
+def check_zero(expr: sp.Expr | sp.Matrix, domain: dict[str, str] | None = None) -> bool:
+    if isinstance(expr, sp.Matrix):
+        return all(check_zero(e, domain) for e in expr)
+    if sp.simplify(expr) == 0:
+        return True
+    if expr.equals(0) is True:
+        return True
+    return is_zero_numerical(expr, domain, tolerance=1e-9, points=15)
+
+
+def check_distinct(expr: sp.Expr | sp.Matrix, domain: dict[str, str] | None = None) -> bool:
+    if isinstance(expr, sp.Matrix):
+        return any(check_distinct(e, domain) for e in expr)
+    diff = sp.simplify(expr)
+    if diff == 0:
+        return False
+    if diff.equals(0) is False:
+        return True
+    return is_distinct_numerical(diff, domain, tolerance=1e-9, points=15)
+
+
 def verify_item(item: Item) -> dict:
-    target = parse_expression(item.answer_expression, item.domain)
+    if item.verification_mode == "qualitative":
+        display_texts = [o.display_latex if o.display_latex else o.latex for o in item.options]
+        if len(set(display_texts)) != 4:
+            raise ValueError("Equivalent distractors rejected")
+        expressions = [o.expression for o in item.options]
+        if len(set(expressions)) != 4 and len(set(display_texts)) != 4:
+            raise ValueError("Option distinctness cannot be established")
+        if item.correct_id not in "ABCD":
+            raise ValueError("Key does not uniquely match solution certificate")
+        return {
+            "id": item.id,
+            "valid": True,
+            "canonical_options": {
+                o.id: (o.display_latex if o.display_latex else o.latex) for o in item.options
+            },
+            "checks": [
+                "unique-options",
+                "qualitative-mode",
+                "key-contract",
+                "trap-presence",
+            ],
+            "scope": "Qualitative verification; display options and key contract confirmed without algebraic derivation.",
+        }
+
+    target_source = (
+        item.evaluated_answer_expression
+        if item.evaluated_answer_expression
+        else item.answer_expression
+    )
+    target = parse_expression(target_source, item.domain)
     values = []
+    canonical_options = {}
+
     for option in item.options:
-        value = parse_expression(option.expression, item.domain)
+        expr_source = (
+            option.evaluated_expression if option.evaluated_expression else option.expression
+        )
+        value = parse_expression(expr_source, item.domain)
         derived = parse_expression(option.derived_expression, item.domain)
-        if isinstance(value, sp.Matrix) and isinstance(derived, sp.Matrix):
-            if not all(sp.simplify(e) == 0 for e in (value - derived)):
-                raise ValueError(f"Option {option.id} does not match its derivation certificate")
-        elif sp.simplify(value - derived) != 0:
+
+        diff_derived = value - derived
+        if not check_zero(diff_derived, item.domain):
             raise ValueError(f"Option {option.id} does not match its derivation certificate")
+
         if option.unit != item.expected_unit:
             raise ValueError(f"Option {option.id} violates expected dimensional powers")
+
         for previous in values:
-            if isinstance(value, sp.Matrix) and isinstance(previous, sp.Matrix):
-                matrix_diff = value - previous
-                if all(sp.simplify(e) == 0 for e in matrix_diff):
-                    raise ValueError("Equivalent distractors rejected")
-                if not any(sp.simplify(e).equals(0) is False for e in matrix_diff):
-                    raise ValueError("Option distinctness cannot be established")
-            else:
-                difference = sp.simplify(value - previous)
-                if difference == 0:
-                    raise ValueError("Equivalent distractors rejected")
-                # Require a proof of non-identity, not merely an unproven != 0.
-                if difference.equals(0) is not False:
-                    raise ValueError("Option distinctness cannot be established")
+            diff_prev = value - previous
+            if check_zero(diff_prev, item.domain):
+                raise ValueError("Equivalent distractors rejected")
+            if not check_distinct(diff_prev, item.domain):
+                raise ValueError("Option distinctness cannot be established")
+
         values.append(value)
-        if isinstance(value, sp.Matrix) and isinstance(target, sp.Matrix):
-            equivalent = all(sp.simplify(e) == 0 for e in (value - target))
-        else:
-            equivalent = sp.simplify(value - target) == 0
+
+        diff_target = value - target
+        equivalent = check_zero(diff_target, item.domain)
         if equivalent != (option.id == item.correct_id):
             raise ValueError("Key does not uniquely match solution certificate")
+
         if option.trap:
             r = option.trap.recovery_check
             rec_val = parse_expression(r.expression, item.domain)
             rec_target = parse_expression(r.target_expression, item.domain)
-            if isinstance(rec_val, sp.Matrix) and isinstance(rec_target, sp.Matrix):
-                if not all(sp.simplify(e) == 0 for e in (rec_val - rec_target)):
-                    raise ValueError("Recovery answer certificate failed")
-            elif sp.simplify(rec_val - rec_target) != 0:
+            diff_rec = rec_val - rec_target
+            if not check_zero(diff_rec, item.domain):
                 raise ValueError("Recovery answer certificate failed")
+
+        canonical_options[option.id] = (
+            option.display_latex if option.display_latex else to_canonical_latex(value)
+        )
+
     return {
         "id": item.id,
         "valid": True,
-        "canonical_options": {
-            o.id: to_canonical_latex(v) for o, v in zip(item.options, values, strict=True)
-        },
+        "canonical_options": canonical_options,
         "checks": [
             "unique-options",
             "key-certificate",

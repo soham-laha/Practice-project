@@ -32,7 +32,9 @@ class Trap(StrictModel):
 class Option(StrictModel):
     id: str = Field(pattern=r"^[A-D]$")
     latex: str = Field(min_length=1, max_length=500)
+    display_latex: str = Field(default="", max_length=1000)
     expression: str = Field(min_length=1, max_length=300)
+    evaluated_expression: str = Field(default="", max_length=300)
     derived_expression: str = Field(min_length=1, max_length=300)
     unit: list[int] = Field(min_length=3, max_length=3, description="Mass, length, time powers")
     slope: float = Field(ge=-5, le=5)
@@ -58,6 +60,7 @@ class Item(StrictModel):
     options: list[Option] = Field(min_length=4, max_length=4)
     correct_id: str = Field(pattern=r"^[A-D]$")
     answer_expression: str = Field(min_length=1, max_length=300)
+    evaluated_answer_expression: str = Field(default="", max_length=300)
     solution: str = Field(min_length=10, max_length=4000)
     domain: dict[str, Literal["real", "positive", "nonnegative", "integer"]] = Field(max_length=8)
     expected_unit: list[int] = Field(min_length=3, max_length=3)
@@ -70,6 +73,7 @@ class Item(StrictModel):
     positive_marks: Literal[4] = 4
     negative_marks: Literal[1, 2]
     parameter_source: Literal["illustrative", "model-proposed"]
+    verification_mode: Literal["symbolic", "qualitative"] = "symbolic"
 
     @model_validator(mode="after")
     def valid_contract(self):

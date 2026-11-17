@@ -95,6 +95,20 @@
       "noticeFiles": []
     },
     {
+      "name": "@napi-rs/canvas",
+      "version": "1.1.1",
+      "declaredLicense": "MIT",
+      "repository": "git+https://github.com/Brooooooklyn/canvas.git",
+      "noticeFiles": ["napi-rs--canvas-1.1.1-LICENSE.txt"]
+    },
+    {
+      "name": "@napi-rs/canvas-linux-x64-gnu",
+      "version": "1.1.1",
+      "declaredLicense": "MIT",
+      "repository": "git+https://github.com/Brooooooklyn/canvas.git",
+      "noticeFiles": []
+    },
+    {
       "name": "@next/env",
       "version": "16.4.6",
       "declaredLicense": "MIT",
@@ -240,6 +254,13 @@
       "declaredLicense": "MIT",
       "repository": "vercel/next.js",
       "noticeFiles": ["next-16.4.6-license-md.txt"]
+    },
+    {
+      "name": "pdfjs-dist",
+      "version": "6.5.438",
+      "declaredLicense": "Apache-2.0",
+      "repository": "git+https://github.com/mozilla/pdf.js.git",
+      "noticeFiles": ["pdfjs-dist-6.5.438-LICENSE.txt"]
     },
     {
       "name": "picocolors",
