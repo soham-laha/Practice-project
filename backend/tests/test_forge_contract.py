@@ -400,3 +400,66 @@ def test_provider_projection_does_not_relax_final_contract_or_trigger_repairs(
     assert "items" not in response.json()
     assert KEY not in response.text
     assert len(calls) == 1
+
+
+def test_graceful_per_item_release_and_ocr_review(monkeypatch):
+    item1 = seed()
+    item2 = seed()
+    item2["id"] = "item_ocr_review_test"
+    # Cause key certificate mismatch on item2
+    item2["answer_expression"] = "999"
+
+    calls = provider(
+        monkeypatch,
+        {
+            "candidates": [
+                {
+                    "finishReason": "STOP",
+                    "content": {"parts": [{"text": json.dumps({"items": [item1, item2]})}]},
+                }
+            ]
+        },
+    )
+    response = client.post(
+        "/v1/extractions",
+        headers={"X-Gemini-Api-Key": KEY},
+        json={"text": "A complete synthetic problem with two items."},
+    )
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert len(data["verified_items"]) == 1
+    assert data["verified_items"][0]["id"] == item1["id"]
+    assert len(data["needs_ocr_review"]) == 1
+    assert data["needs_ocr_review"][0]["item"]["id"] == item2["id"]
+    assert len(calls) == 1
+
+
+def test_graceful_per_item_release_with_skipped_items(monkeypatch):
+    item1 = seed()
+    item2 = seed()
+    item2["id"] = "item_skipped_test"
+    # Cause derivation failure on item2
+    item2["options"][0]["derived_expression"] = "999"
+
+    calls = provider(
+        monkeypatch,
+        {
+            "candidates": [
+                {
+                    "finishReason": "STOP",
+                    "content": {"parts": [{"text": json.dumps({"items": [item1, item2]})}]},
+                }
+            ]
+        },
+    )
+    response = client.post(
+        "/v1/extractions",
+        headers={"X-Gemini-Api-Key": KEY},
+        json={"text": "A complete synthetic problem with two items."},
+    )
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert len(data["verified_items"]) == 1
+    assert len(data["skipped_items"]) == 1
+    assert data["skipped_items"][0]["item_id"] == item2["id"]
+    assert len(calls) == 1

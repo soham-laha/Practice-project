@@ -12,19 +12,32 @@ fs.mkdirSync(directory, { recursive: true });
 const packages = [];
 const copied = new Set();
 for (const [location, record] of Object.entries(lock.packages)) {
-  if (!location || record.dev || !fs.existsSync(path.join(location, 'package.json'))) continue;
-  const metadata = JSON.parse(fs.readFileSync(path.join(location, 'package.json'), 'utf8'));
+  if (!location || record.dev) continue;
+  let metadata;
+  if (fs.existsSync(path.join(location, 'package.json'))) {
+    metadata = JSON.parse(fs.readFileSync(path.join(location, 'package.json'), 'utf8'));
+  } else {
+    const pkgName = location.slice(location.lastIndexOf('node_modules/') + 'node_modules/'.length);
+    metadata = {
+      name: pkgName,
+      version: record.version || '1.0.0',
+      license: record.license || 'Not declared',
+      repository: '',
+    };
+  }
   const identity = `${metadata.name}@${metadata.version}`;
   if (copied.has(identity)) continue;
   copied.add(identity);
   const slug = metadata.name.replace(/^@/, '').replaceAll('/', '--');
   const noticeFiles = [];
-  for (const file of fs.readdirSync(location)) {
-    if (!/^(license|copying|notice)(?:$|[._-])/i.test(file)) continue;
-    if (!fs.statSync(path.join(location, file)).isFile()) continue;
-    const name = `${slug}-${metadata.version}-${file.replace(/[^a-z0-9_-]/gi, '-')}.txt`;
-    fs.copyFileSync(path.join(location, file), path.join(directory, name));
-    noticeFiles.push(name);
+  if (fs.existsSync(location)) {
+    for (const file of fs.readdirSync(location)) {
+      if (!/^(license|copying|notice)(?:$|[._-])/i.test(file)) continue;
+      if (!fs.statSync(path.join(location, file)).isFile()) continue;
+      const name = `${slug}-${metadata.version}-${file.replace(/[^a-z0-9_-]/gi, '-')}.txt`;
+      fs.copyFileSync(path.join(location, file), path.join(directory, name));
+      noticeFiles.push(name);
+    }
   }
   const entry = {
     name: metadata.name,

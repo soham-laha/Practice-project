@@ -28,7 +28,9 @@ const optionSchema = z
   .object({
     id: z.enum(['A', 'B', 'C', 'D']),
     latex: text(500),
+    display_latex: z.string().max(1000).optional(),
     expression: text(300),
+    evaluated_expression: z.string().max(300).optional(),
     derived_expression: text(300),
     unit: z.array(z.number().int()).length(3),
     slope: finite.min(-5).max(5),
@@ -48,6 +50,7 @@ export const itemSchema = z
     options: z.array(optionSchema).length(4),
     correct_id: z.enum(['A', 'B', 'C', 'D']),
     answer_expression: text(300),
+    evaluated_answer_expression: z.string().max(300).optional(),
     solution: text(4000),
     domain: z.record(z.string(), z.enum(['real', 'positive', 'nonnegative', 'integer'])),
     expected_unit: z.array(z.number().int()).length(3),
@@ -71,6 +74,7 @@ export const itemSchema = z
     positive_marks: z.literal(4),
     negative_marks: z.union([z.literal(1), z.literal(2)]),
     parameter_source: z.enum(['illustrative', 'model-proposed']),
+    verification_mode: z.enum(['symbolic', 'qualitative']).default('symbolic'),
   })
   .strict()
   .superRefine((item, ctx) => {

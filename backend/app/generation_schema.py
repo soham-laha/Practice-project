@@ -87,5 +87,7 @@ def extraction_schema(exam: Exam) -> dict:
     # Enforce them in decoding too; unsupported exclusive bounds are not enough.
     for name, value in {"a": 1, "b": 0, "c": 0.25, "alpha": 1}.items():
         properties[name]["enum"] = [value]
-    item["required"] = list(properties)  # Include literal fields with public defaults.
+    for def_node in schema.get("$defs", {}).values():
+        if def_node.get("type") == "object" and "properties" in def_node:
+            def_node["required"] = list(def_node["properties"])
     return schema
