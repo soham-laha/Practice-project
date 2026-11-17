@@ -135,7 +135,13 @@ export function Forge() {
     setUsedModel(model);
 
     if (generatorMode === 'local') {
-      if (tab === 'text' && text.trim().length > 0 && text.trim().length < 10) {
+      if (tab !== 'text') {
+        setError(
+          'The in-browser engine generates drills from text problems offline. For image photos or PDFs, switch Generation engine to "Gemini Cloud Model" or paste the question into the "Paste text" tab.',
+        );
+        return;
+      }
+      if (text.trim().length > 0 && text.trim().length < 10) {
         setError('Paste a complete problem, at least 10 characters.');
         return;
       }
@@ -464,6 +470,14 @@ export function Forge() {
                 />
               </label>
             )}
+            {tab !== 'text' && generatorMode === 'local' && (
+              <p className="tiny-text" style={{ marginTop: '0.5rem', color: '#f59e0b' }}>
+                <strong>Note:</strong> The In-Browser Engine creates drills from text problems
+                offline. To extract questions directly from image photos or PDFs, switch{' '}
+                <em>Generation engine</em> below to <strong>Gemini Cloud Model</strong> (or paste
+                problem text into the <em>Paste text</em> tab).
+              </p>
+            )}
           </div>
           <div className="forge-settings">
             <div>
@@ -497,7 +511,9 @@ export function Forge() {
                   }}
                   disabled={busy}
                 >
-                  <option value="gemini-flash-latest">Gemini Flash (balanced)</option>
+                  <option value="gemini-flash-latest">
+                    Gemini Flash (fast vision & balanced, recommended)
+                  </option>
                   <option value="gemini-flash-lite-latest">Gemini Flash Lite (lightweight)</option>
                 </select>
               </div>
@@ -572,6 +588,22 @@ export function Forge() {
                 </h3>
               </div>
               <p>{error}</p>
+              {usedModel === 'gemini-flash-lite-latest' &&
+                (error.includes('time limit') || failure?.status === 504) && (
+                  <div style={{ marginTop: '0.75rem', marginBottom: '0.75rem' }}>
+                    <button
+                      type="button"
+                      className="button secondary small-button"
+                      onClick={() => {
+                        setModel('gemini-flash-latest');
+                        setError('');
+                        setFailure(null);
+                      }}
+                    >
+                      Switch to Gemini Flash (balanced) & retry
+                    </button>
+                  </div>
+                )}
               {failure && (
                 <>
                   <p className="tiny-text">

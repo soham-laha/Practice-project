@@ -72,9 +72,15 @@ all four option derivations, the unique key, all three recovery certificates, an
 async def _request(
     model: str, key: str, parts: list[dict], system: str, response_schema: dict | None = None
 ):
+    has_inline_data = any("inlineData" in part for part in parts)
+    max_tokens = (
+        8192
+        if has_inline_data and response_schema is not None
+        else (24000 if response_schema is not None else 1800)
+    )
     config: dict = {
         "temperature": 0.2,
-        "maxOutputTokens": 24000 if response_schema is not None else 1800,
+        "maxOutputTokens": max_tokens,
     }
     if response_schema is not None:
         # Only documented Gemini decoding constraints, specialized to this
@@ -102,8 +108,8 @@ async def _request(
     except (httpx.TimeoutException, TimeoutError):
         raise EngineError(
             504,
-            "Gemini exceeded the request time limit. Try one cropped problem or the other model; "
-            "reference drills remain available. No automatic retry was made.",
+            "Gemini exceeded the request time limit. Try Gemini Flash (balanced) instead of Flash Lite, "
+            "or try one cropped problem. Reference drills remain available. No automatic retry was made.",
             "provider_timeout",
         ) from None
     except httpx.RequestError:
