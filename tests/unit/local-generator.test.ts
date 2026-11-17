@@ -92,13 +92,28 @@ describe('Local In-Browser Drill & Option Generator', () => {
   });
 
   it('generates a multi-item drill completely in-browser without API key', () => {
-    const drill = generateLocalDrill({ exam: 'main', requestedCount: 4 });
-    expect(drill).toHaveLength(4);
+    const drill = generateLocalDrill({ exam: 'main', requestedCount: 12 });
+    expect(drill).toHaveLength(12);
     for (const item of drill) {
       expect(() => itemSchema.parse(item)).not.toThrow();
       expect(item.options).toHaveLength(4);
       expect(item.options.filter((o) => o.trap === null)).toHaveLength(1);
+      // Ensure all 4 options are distinct
+      const optionLatex = new Set(item.options.map((o) => o.latex));
+      expect(optionLatex.size).toBe(4);
     }
+  });
+
+  it('ensures coordinate questions have coordinate options and physics questions have unit options', () => {
+    const drill = generateLocalDrill({ exam: 'main', requestedCount: 12 });
+    // Item 1 is coordinate line intersection
+    expect(drill[0].options[0].latex).toMatch(/^\([+-]?\d+.*,\s*[+-]?\d+.*\)$/);
+    // Item 8 is circle center coordinates
+    expect(drill[7].options[0].latex).toMatch(/^\([+-]?\d+.*,\s*[+-]?\d+.*\)$/);
+    // Item 5 is electrostatic force in Newtons
+    expect(drill[4].options[0].latex).toContain('N');
+    // Item 7 is velocity in m/s
+    expect(drill[6].options[0].latex).toContain('m/s');
   });
 
   it('extracts from multi-question text locally', () => {

@@ -102,19 +102,20 @@ export function Coach({ session, sample = false }: { session?: Session; sample?:
       <p>
         {hasKey
           ? 'A small next step, tailored to the evidence. This panel sends your drill summary to Gemini when it opens; follow-ups use the same key.'
-          : 'A specific guardrail. A targeted question. A nudge in the right direction—powered by your own Gemini key.'}
+          : 'A specific guardrail. A targeted question. A nudge in the right direction—powered by your optional Gemini key.'}
       </p>
       {!hasKey ? (
         <>
           <button className="button secondary coach-connect" onClick={() => setKeyModal(true)}>
             <KeyRound size={15} />
-            Add key for coaching <ArrowUpRight size={14} />
+            Add key for coaching (optional) <ArrowUpRight size={14} />
           </button>
           <div className="privacy-note">
             <ShieldCheck size={16} />
             <span>
-              Free reference drills and guided repair work without AI. Your key stays in this
-              browser; you control when to remove it.
+              All drills, scoring, and analysis work locally on this device without requiring an API
+              key. Bringing your own Gemini key is optional for personalized post-drill study
+              coaching and cloud image extraction.
             </span>
           </div>
         </>

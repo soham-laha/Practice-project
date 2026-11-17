@@ -54,7 +54,7 @@ def test_schema_uses_only_supported_keywords_and_keeps_resolving_local_refs(exam
             assert node["additionalProperties"] is False
             assert set(node["required"]) == set(node["properties"])
     assert schema["properties"]["items"]["minItems"] == 1
-    assert schema["properties"]["items"]["maxItems"] == 10
+    assert schema["properties"]["items"]["maxItems"] == 25
 
 
 def test_literal_and_id_constraints_are_provider_enums_not_ignored_const_or_pattern():
@@ -85,7 +85,7 @@ def test_each_call_has_independent_mode_constraints_without_mutating_public_sche
     m["exam"]["enum"].append("advanced")
     assert extraction_schema("main")["$defs"]["Item"]["properties"]["exam"]["enum"] == ["main"]
     assert ExtractionResult.model_json_schema() == before
-    assert before["properties"]["items"]["maxItems"] == 10
+    assert before["properties"]["items"]["maxItems"] == 25
     with pytest.raises(ValueError, match="Unsupported exam"):
         extraction_schema("invalid")
 

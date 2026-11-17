@@ -108,7 +108,7 @@ export function Simulator() {
         else if (start === 'forged') {
           const raw = JSON.parse(sessionStorage.getItem(KEYS.forged) || '[]');
           const items: Item[] = raw.map((i: unknown) => itemSchema.parse(i));
-          if (items.length && items.length <= 20 && items.every((i) => i.exam === items[0].exam))
+          if (items.length && items.length <= 50 && items.every((i) => i.exam === items[0].exam))
             setActive(makeActive(items, false, learner.tier, 'forged'));
           else setError('No forged drill is waiting. Build a drill or try the reference set.');
         } else {

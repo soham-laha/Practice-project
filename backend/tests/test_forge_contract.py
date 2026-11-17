@@ -67,7 +67,7 @@ def assert_schema(request, exam):
     assert schema["additionalProperties"] is False
     assert schema["required"] == ["items"]
     items = schema["properties"]["items"]
-    assert (items["minItems"], items["maxItems"]) == (1, 10)
+    assert (items["minItems"], items["maxItems"]) == (1, 25)
     item = schema["$defs"][items["items"]["$ref"].split("/")[-1]]
     fields = item["properties"]
     assert fields["options"]["minItems"] == 4

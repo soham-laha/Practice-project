@@ -573,11 +573,247 @@ export const LOCAL_PROBLEM_TEMPLATES: Array<(exam: Exam, idx: number) => Item> =
       parameter_source: 'model-proposed',
     });
   },
+  // 5. Electrostatics / Electric Force
+  (exam, idx) => {
+    const q = 2;
+    const e = 10;
+    const force = q * e; // 20 N
+    const correctId: 'A' | 'B' | 'C' | 'D' = 'A';
+    const options = generateScalarOptions(force, 'N', [1, 1, -2], correctId);
+    return itemSchema.parse({
+      schema_version: 'targetjee.item.v2',
+      id: `local-electrostatics-${idx}-${Date.now().toString(36)}`,
+      exam,
+      subject: 'Physics',
+      topic: 'Electrostatics',
+      prompt: `A point charge of $${q}\\text{ C}$ is placed in a uniform electric field of magnitude $${e}\\text{ N/C}$. Determine the magnitude of the electrostatic force acting on the charge.`,
+      context: 'Electrostatic force is F = q * E.',
+      options,
+      correct_id: correctId,
+      answer_expression: `${force}`,
+      solution: `By Coulomb force definition: $F = q E = (${q}\\text{ C}) \\times (${e}\\text{ N/C}) = ${force}\\text{ N}$.`,
+      domain: {},
+      expected_unit: [1, 1, -2],
+      diagram_anchors: [],
+      beta_seconds: exam === 'main' ? 95 : 185,
+      alpha: 1.0,
+      a: 1.0,
+      b: 0.0,
+      c: 0.25,
+      positive_marks: 4,
+      negative_marks: 1,
+      parameter_source: 'model-proposed',
+    });
+  },
+  // 6. Calculus / Definite Integral
+  (exam, idx) => {
+    const correctId: 'A' | 'B' | 'C' | 'D' = 'B';
+    const options = generateScalarOptions(8, '', [0, 0, 0], correctId);
+    return itemSchema.parse({
+      schema_version: 'targetjee.item.v2',
+      id: `local-calculus-${idx}-${Date.now().toString(36)}`,
+      exam,
+      subject: 'Mathematics',
+      topic: 'Definite Integration',
+      prompt: `Evaluate the definite integral $\\int_0^2 3x^2 dx$.`,
+      context: 'Antiderivative of 3x^2 is x^3. Apply fundamental theorem of calculus.',
+      options,
+      correct_id: correctId,
+      answer_expression: '8',
+      solution: `$\\int_0^2 3x^2 dx = [x^3]_0^2 = 2^3 - 0 = 8$.`,
+      domain: {},
+      expected_unit: [0, 0, 0],
+      diagram_anchors: [],
+      beta_seconds: exam === 'main' ? 100 : 190,
+      alpha: 1.0,
+      a: 1.0,
+      b: 0.0,
+      c: 0.25,
+      positive_marks: 4,
+      negative_marks: 1,
+      parameter_source: 'model-proposed',
+    });
+  },
+  // 7. Work-Energy Theorem
+  (exam, idx) => {
+    const v = 6;
+    const correctId: 'A' | 'B' | 'C' | 'D' = 'C';
+    const options = generateScalarOptions(v, 'm/s', [0, 1, -1], correctId);
+    return itemSchema.parse({
+      schema_version: 'targetjee.item.v2',
+      id: `local-work-energy-${idx}-${Date.now().toString(36)}`,
+      exam,
+      subject: 'Physics',
+      topic: 'Work, Power & Energy',
+      prompt: `A body of mass $2\\text{ kg}$ is initially at rest on a frictionless surface. A horizontal force does $36\\text{ J}$ of work on it. Find the final speed of the body.`,
+      context: 'Work-energy theorem: W = Delta K = 1/2 * m * v^2.',
+      options,
+      correct_id: correctId,
+      answer_expression: `${v}`,
+      solution: `$W = \\frac{1}{2} m v^2 \\implies 36 = \\frac{1}{2}(2) v^2 \\implies v^2 = 36 \\implies v = 6\\text{ m/s}$.`,
+      domain: {},
+      expected_unit: [0, 1, -1],
+      diagram_anchors: [],
+      beta_seconds: exam === 'main' ? 105 : 195,
+      alpha: 1.0,
+      a: 1.0,
+      b: 0.0,
+      c: 0.25,
+      positive_marks: 4,
+      negative_marks: 1,
+      parameter_source: 'model-proposed',
+    });
+  },
+  // 8. Circle Center Coordinates
+  (exam, idx) => {
+    const correctId: 'A' | 'B' | 'C' | 'D' = 'D';
+    const options = generateCoordinateOptions(3, -4, correctId);
+    return itemSchema.parse({
+      schema_version: 'targetjee.item.v2',
+      id: `local-circle-center-${idx}-${Date.now().toString(36)}`,
+      exam,
+      subject: 'Mathematics',
+      topic: 'Coordinate Geometry',
+      prompt: `Find the coordinates of the center of the circle given by the equation $x^2 + y^2 - 6x + 8y = 0$.`,
+      context: 'General circle form x^2 + y^2 + 2gx + 2fy + c = 0 has center (-g, -f).',
+      options,
+      correct_id: correctId,
+      answer_expression: '(3, -4)',
+      solution: `Comparing with $x^2 + y^2 + 2gx + 2fy + c = 0$, we have $2g = -6 \\implies g = -3$ and $2f = 8 \\implies f = 4$. The center is $(-g, -f) = (3, -4)$.`,
+      domain: {},
+      expected_unit: [0, 0, 0],
+      diagram_anchors: [],
+      beta_seconds: exam === 'main' ? 100 : 190,
+      alpha: 1.0,
+      a: 1.0,
+      b: 0.0,
+      c: 0.25,
+      positive_marks: 4,
+      negative_marks: 1,
+      parameter_source: 'model-proposed',
+    });
+  },
+  // 9. Vectors / Dot Product
+  (exam, idx) => {
+    const correctId: 'A' | 'B' | 'C' | 'D' = 'A';
+    const options = generateScalarOptions(2, '', [0, 0, 0], correctId);
+    return itemSchema.parse({
+      schema_version: 'targetjee.item.v2',
+      id: `local-vector-dot-${idx}-${Date.now().toString(36)}`,
+      exam,
+      subject: 'Mathematics',
+      topic: 'Vector Algebra',
+      prompt: `Given two vectors $\\vec{A} = 2\\hat{i} + 3\\hat{j}$ and $\\vec{B} = 4\\hat{i} - 2\\hat{j}$, calculate the scalar dot product $\\vec{A} \\cdot \\vec{B}$.`,
+      context: 'Dot product: A . B = Ax * Bx + Ay * By.',
+      options,
+      correct_id: correctId,
+      answer_expression: '2',
+      solution: `$\\vec{A} \\cdot \\vec{B} = (2)(4) + (3)(-2) = 8 - 6 = 2$.`,
+      domain: {},
+      expected_unit: [0, 0, 0],
+      diagram_anchors: [],
+      beta_seconds: exam === 'main' ? 95 : 185,
+      alpha: 1.0,
+      a: 1.0,
+      b: 0.0,
+      c: 0.25,
+      positive_marks: 4,
+      negative_marks: 1,
+      parameter_source: 'model-proposed',
+    });
+  },
+  // 10. Current Electricity / Equivalent Parallel Resistance
+  (exam, idx) => {
+    const correctId: 'A' | 'B' | 'C' | 'D' = 'B';
+    const options = generateScalarOptions(2, '\\Omega', [0, 0, 0], correctId);
+    return itemSchema.parse({
+      schema_version: 'targetjee.item.v2',
+      id: `local-resistors-${idx}-${Date.now().toString(36)}`,
+      exam,
+      subject: 'Physics',
+      topic: 'Current Electricity',
+      prompt: `Two resistors of resistances $6\\text{ }\\Omega$ and $3\\text{ }\\Omega$ are connected in parallel. Calculate the equivalent resistance of the combination.`,
+      context: 'Parallel resistance: 1/Req = 1/R1 + 1/R2, or Req = (R1 * R2) / (R1 + R2).',
+      options,
+      correct_id: correctId,
+      answer_expression: '2',
+      solution: `$R_{eq} = \\frac{R_1 R_2}{R_1 + R_2} = \\frac{6 \\times 3}{6 + 3} = \\frac{18}{9} = 2\\text{ }\\Omega$.`,
+      domain: {},
+      expected_unit: [0, 0, 0],
+      diagram_anchors: [],
+      beta_seconds: exam === 'main' ? 95 : 185,
+      alpha: 1.0,
+      a: 1.0,
+      b: 0.0,
+      c: 0.25,
+      positive_marks: 4,
+      negative_marks: 1,
+      parameter_source: 'model-proposed',
+    });
+  },
+  // 11. Projectile Motion / Maximum Height
+  (exam, idx) => {
+    const correctId: 'A' | 'B' | 'C' | 'D' = 'C';
+    const options = generateScalarOptions(20, 'm', [0, 1, 0], correctId);
+    return itemSchema.parse({
+      schema_version: 'targetjee.item.v2',
+      id: `local-projectile-${idx}-${Date.now().toString(36)}`,
+      exam,
+      subject: 'Physics',
+      topic: 'Kinematics',
+      prompt: `A ball is projected vertically upwards with an initial speed of $20\\text{ m/s}$. Taking acceleration due to gravity $g = 10\\text{ m/s}^2$, find the maximum height attained by the ball.`,
+      context: 'Kinematic equation v^2 = u^2 - 2gh with v = 0 at maximum height.',
+      options,
+      correct_id: correctId,
+      answer_expression: '20',
+      solution: `At maximum height $v = 0$: $0 = u^2 - 2g H \\implies H = \\frac{u^2}{2g} = \\frac{20^2}{2 \\times 10} = \\frac{400}{20} = 20\\text{ m}$.`,
+      domain: {},
+      expected_unit: [0, 1, 0],
+      diagram_anchors: [],
+      beta_seconds: exam === 'main' ? 100 : 190,
+      alpha: 1.0,
+      a: 1.0,
+      b: 0.0,
+      c: 0.25,
+      positive_marks: 4,
+      negative_marks: 1,
+      parameter_source: 'model-proposed',
+    });
+  },
+  // 12. Ideal Gas Work Done
+  (exam, idx) => {
+    const correctId: 'A' | 'B' | 'C' | 'D' = 'D';
+    const options = generateScalarOptions(300, 'J', [1, 2, -2], correctId);
+    return itemSchema.parse({
+      schema_version: 'targetjee.item.v2',
+      id: `local-thermodynamics-${idx}-${Date.now().toString(36)}`,
+      exam,
+      subject: 'Chemistry',
+      topic: 'Thermodynamics',
+      prompt: `An ideal gas expands isobarically at a constant pressure of $100\\text{ kPa}$ from an initial volume of $2\\text{ L}$ to a final volume of $5\\text{ L}$. Find the work done by the gas during this expansion.`,
+      context: 'Isobaric work done W = P * Delta V with Delta V in m^3 (1 L = 10^-3 m^3).',
+      options,
+      correct_id: correctId,
+      answer_expression: '300',
+      solution: `$W = P \\Delta V = (100 \\times 10^3\\text{ Pa}) \\times ((5 - 2) \\times 10^{-3}\\text{ m}^3) = 100 \\times 3 = 300\\text{ J}$.`,
+      domain: {},
+      expected_unit: [1, 2, -2],
+      diagram_anchors: [],
+      beta_seconds: exam === 'main' ? 105 : 195,
+      alpha: 1.0,
+      a: 1.0,
+      b: 0.0,
+      c: 0.25,
+      positive_marks: 4,
+      negative_marks: 1,
+      parameter_source: 'model-proposed',
+    });
+  },
 ];
 
 /**
  * Extracts multiple questions from text or generates a complete drill
- * with up to 10 distinct questions, completely in-browser without requiring an external API key.
+ * with up to 25 distinct questions, completely in-browser without requiring an external API key.
  */
 export function generateLocalDrill(input: {
   text?: string;
@@ -615,7 +851,7 @@ export function generateLocalDrill(input: {
             }
           }
         }
-        if (extractedItems.length >= 10) break;
+        if (extractedItems.length >= 25) break;
       }
       if (extractedItems.length > 0) {
         return extractedItems;
@@ -624,7 +860,7 @@ export function generateLocalDrill(input: {
   }
 
   // 2. Return pre-calibrated bank items matching the exam
-  const count = Math.min(10, Math.max(1, input.requestedCount || 4));
+  const count = Math.min(25, Math.max(1, input.requestedCount || 6));
   const items: Item[] = [];
   for (let i = 0; i < count; i++) {
     const templateFn = LOCAL_PROBLEM_TEMPLATES[i % LOCAL_PROBLEM_TEMPLATES.length];
