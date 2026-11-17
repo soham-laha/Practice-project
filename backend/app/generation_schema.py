@@ -74,7 +74,7 @@ def extraction_schema(exam: Exam) -> dict:
         raise ValueError("Unsupported exam mode")
     schema = _project(ExtractionResult.model_json_schema())
     schema["properties"]["items"]["minItems"] = 1
-    schema["properties"]["items"]["maxItems"] = 10
+    schema["properties"]["items"]["maxItems"] = 25
     item = schema["$defs"]["Item"]
     properties = item["properties"]
     properties["exam"]["enum"] = [exam]

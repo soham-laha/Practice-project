@@ -91,7 +91,7 @@ class Item(StrictModel):
 class ExtractionResult(StrictModel):
     # The source for the supported-keyword provider schema projection. Final
     # Pydantic and isolated algebra checks are independent; JSON is no proof.
-    items: list[Item] = Field(min_length=1, max_length=10)
+    items: list[Item] = Field(min_length=1, max_length=25)
 
 
 class ExtractionRequest(StrictModel):
@@ -108,4 +108,4 @@ class CoachRequest(StrictModel):
 
 
 class ValidationRequest(StrictModel):
-    items: list[Item] = Field(min_length=1, max_length=10)
+    items: list[Item] = Field(min_length=1, max_length=25)

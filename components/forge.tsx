@@ -118,7 +118,7 @@ export function Forge() {
         tab === 'text' ? 'v1/extractions' : 'v1/extractions/upload',
         body,
       );
-      if (!Array.isArray(result.items) || !result.items.length || result.items.length > 10)
+      if (!Array.isArray(result.items) || !result.items.length || result.items.length > 25)
         throw new Error();
       const parsed: Item[] = result.items.map((i: unknown) => itemSchema.parse(i));
       if (
