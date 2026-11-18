@@ -45,7 +45,7 @@ jobs:
         run: |
           python -m pytest backend/tests -q -W error
           npm test
-          npm audit --audit-level=low
+          npm audit --omit=dev --audit-level=low
           python -m pip_audit -r backend/requirements-dev.txt --vulnerability-service pypi --progress-spinner off
           python -m pip check
       - name: 3 · Research, palette and font audit

@@ -604,6 +604,50 @@ export function Forge() {
                     </button>
                   </div>
                 )}
+              {failure?.diagnostic?.revision &&
+                failure.diagnostic.revision !== 'workspace' &&
+                failure.diagnostic.revision !==
+                  (process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA?.slice(0, 8) || 'd6fe6d2b') && (
+                  <div
+                    style={{
+                      marginTop: '0.75rem',
+                      marginBottom: '0.75rem',
+                      padding: '0.75rem 1rem',
+                      borderRadius: '0.5rem',
+                      background: 'rgba(245, 158, 11, 0.12)',
+                      border: '1px solid rgba(245, 158, 11, 0.3)',
+                    }}
+                  >
+                    <p
+                      style={{
+                        color: '#fcd34d',
+                        margin: 0,
+                        fontSize: '0.8125rem',
+                        lineHeight: '1.4',
+                      }}
+                    >
+                      <strong>Render Backend Needs Deployment:</strong> The API server on Render is
+                      running older build <code>{failure.diagnostic.revision}</code>, while the
+                      latest fixes (PR #11/#12) require revision{' '}
+                      <code>
+                        {process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA?.slice(0, 8) || 'd6fe6d2b'}
+                      </code>
+                      .
+                    </p>
+                    <p
+                      style={{
+                        color: '#cbd5e1',
+                        margin: '0.4rem 0 0',
+                        fontSize: '0.75rem',
+                        lineHeight: '1.4',
+                      }}
+                    >
+                      In your Render dashboard for <code>targetjee-studio-api</code>, click{' '}
+                      <strong>Manual Deploy &rarr; Deploy latest commit</strong> on{' '}
+                      <code>main</code>.
+                    </p>
+                  </div>
+                )}
               {failure && (
                 <>
                   <p className="tiny-text">
